@@ -1,0 +1,3 @@
+/home/antoine/Documents/cours/CNAM/A1/Struct de données (Lequentrec v2)/Tetris-avec-un-C-c-dille/CMakeFiles/Tetris.dir
+/home/antoine/Documents/cours/CNAM/A1/Struct de données (Lequentrec v2)/Tetris-avec-un-C-c-dille/CMakeFiles/edit_cache.dir
+/home/antoine/Documents/cours/CNAM/A1/Struct de données (Lequentrec v2)/Tetris-avec-un-C-c-dille/CMakeFiles/rebuild_cache.dir
