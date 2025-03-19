@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/Tetris.dir/tetris.c.o -o Tetris  -L/usr/lib/x86_64-linux-gnu  -lSDL2 
