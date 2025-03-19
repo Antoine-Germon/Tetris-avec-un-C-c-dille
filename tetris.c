@@ -111,13 +111,38 @@ int main(int argc, char** argv)
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(pWindow);
     SDL_Quit();
+    
+    for (int i = 0; i < BOARD_HEIGHT; i++)
+        free(board[i]);
+
+    free(board);
+
     return 0;
 }
 
 void init()
 {
-    SDL_Init(SDL_INIT_VIDEO);
-    pWindow = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, BOARD_WIDTH * BLOCK_SIZE * 2, BOARD_HEIGHT * BLOCK_SIZE * 2, SDL_WINDOW_SHOWN);
+    board = malloc(BOARD_HEIGHT * sizeof(int *));
+    if (!board) {
+        printf("Failed to allocate memory for row pointers\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < BOARD_HEIGHT; i++) {
+        board[i] = calloc(BOARD_WIDTH, sizeof(int)); // calloc initializes to 0
+        if (!board[i]) {
+            printf("Failed to allocate memory for row\n");
+
+            while (--i >= 0) free(board[i]);
+            free(board);
+            exit(EXIT_FAILURE);
+        }
+    }
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        printf("SDL_Init failed: %s\n", SDL_GetError());
+        exit(EXIT_FAILURE);
+    }
+    pWindow = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED);
 }
 
@@ -203,19 +228,44 @@ Tetromino* rotateTetrominoLeft() {
     return tempTetromino;
 }
 
+char valueinarray(int val, int *arr, size_t n) {
+    for(size_t i = 0; i < n; i++) {
+        if(arr[i] == val)
+            return 1;
+    }
+    return 0;
+}
+
 void placeTetromino()
 {
+    int checkedLines[BOARD_HEIGHT] = {0};
+    int nbOfCheckedLines = 0;
+
     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < 4; j++)
-        {
-            if (currentTetromino->shape[i][j])
-            {
-                board[currentTetromino->y + i][currentTetromino->x + j] = 1;
+        {   
+            if (!currentTetromino->shape[i][j])
+                continue;
+
+            if (!valueinarray(currentTetromino->y + i, checkedLines, BOARD_HEIGHT)) {
+                checkedLines[nbOfCheckedLines] = currentTetromino->y + i;
+                nbOfCheckedLines++;
             }
+
+            board[currentTetromino->y + i][currentTetromino->x + j] = 1;
         }
     }
+
+    for (int i = 0; i < nbOfCheckedLines; i++) {
+        int row = checkedLines[i];
+        char lineFull = checkLineFull(row);
+        if (lineFull) clearLine(row);
+    }
+
     currentTetromino = getRandomTetromino();
+    currentTetromino->x = 3;
+    currentTetromino->y = 0;
 }
 
 void moveTetromino(int dx, int dy)
@@ -228,5 +278,32 @@ void moveTetromino(int dx, int dy)
     else if (dy > 0) // If moving down is blocked, place the piece
     {
         placeTetromino();
+    }
+}
+
+char checkLineFull(int row)
+{
+    printf("%d\n", row);
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        printf("%d ", board[row][i]);
+        if (!board[row][i]) {
+            printf("\n");
+            return 0;
+        }
+    }
+    printf("\n");
+    return 1;
+}
+
+void clearLine(int row)
+{
+    for (int i = 0; i < BOARD_WIDTH; i++) {
+        board[row][i] = 0;
+    }
+
+    for (int i = row; i > 0; i--) {
+        int * tmp = board[i - 1];
+        board[i] = board[i - 1];
+        board[i - 1] = tmp;
     }
 }
