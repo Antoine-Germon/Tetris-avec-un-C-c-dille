@@ -9,53 +9,61 @@ Tetromino tetrominos[] = {
         {0, 1, 1, 0},
         {0, 1, 1, 0},
         {0, 0, 0, 0}
-    }},
+    }, .color = {255, 255, 0}}, // Yellow
+
     // Line
     { .x = 3, .y = 0, .shape = {
         {0, 1, 0, 0},
         {0, 1, 0, 0},
         {0, 1, 0, 0},
         {0, 1, 0, 0}
-    }},
+    }, .color = {0, 255, 255}}, // Cyan
+
     // T-shape
     { .x = 3, .y = 0, .shape = {
         {0, 0, 0, 0},
         {0, 1, 0, 0},
         {1, 1, 1, 0},
         {0, 0, 0, 0}
-    }},
+    }, .color = {128, 0, 128}}, // Purple
+
     // L-shape
     { .x = 3, .y = 0, .shape = {
         {0, 1, 0, 0},
         {0, 1, 0, 0},
         {0, 1, 1, 0},
         {0, 0, 0, 0}
-    }},
+    }, .color = {255, 165, 0}}, // Orange
+
     // Reverse L-shape
     { .x = 3, .y = 0, .shape = {
         {0, 0, 1, 0},
         {0, 0, 1, 0},
         {0, 1, 1, 0},
         {0, 0, 0, 0}
-    }},
+    }, .color = {0, 0, 255}}, // Blue
+
     // Z-shape
     { .x = 3, .y = 0, .shape = {
         {0, 0, 0, 0},
         {0, 1, 1, 0},
         {0, 0, 1, 1},
         {0, 0, 0, 0}
-    }},
+    }, .color = {255, 0, 0}}, // Red
+
     // Reverse Z-shape
     { .x = 3, .y = 0, .shape = {
         {0, 0, 0, 0},
         {0, 1, 1, 0},
         {1, 1, 0, 0},
         {0, 0, 0, 0}
-    }}
+    }, .color = {0, 255, 0}} // Green
 };
 
 int main(int argc, char** argv)
 {
+    srand(time(NULL));
+
     init();
 
     currentTetromino = getRandomTetromino();
@@ -120,16 +128,17 @@ int main(int argc, char** argv)
     return 0;
 }
 
+
 void init()
 {
-    board = malloc(BOARD_HEIGHT * sizeof(int *));
+    board = malloc(BOARD_HEIGHT * sizeof(Cell *));
     if (!board) {
         printf("Failed to allocate memory for row pointers\n");
         exit(EXIT_FAILURE);
     }
 
     for (int i = 0; i < BOARD_HEIGHT; i++) {
-        board[i] = calloc(BOARD_WIDTH, sizeof(int)); // calloc initializes to 0
+        board[i] = calloc(BOARD_WIDTH, sizeof(Cell)); // calloc initializes to 0
         if (!board[i]) {
             printf("Failed to allocate memory for row\n");
 
@@ -138,10 +147,21 @@ void init()
             exit(EXIT_FAILURE);
         }
     }
+
+    for (int y = 0; y < BOARD_HEIGHT; y++)
+    {
+        for (int x = 0; x < BOARD_WIDTH; x++)
+        {
+            board[y][x].occupied = 0;
+            setCellColor(x, y, 0, 0, 0);
+        }
+    }
+
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL_Init failed: %s\n", SDL_GetError());
         exit(EXIT_FAILURE);
     }
+
     pWindow = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED);
 }
@@ -151,23 +171,24 @@ void draw()
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+    //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     
     // Draw board
     for (int y = 0; y < BOARD_HEIGHT; y++)
     {
         for (int x = 0; x < BOARD_WIDTH; x++)
         {
-            if (board[y][x])
+            if (board[y][x].occupied)
             {
                 SDL_Rect block = { x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE };
+                SDL_SetRenderDrawColor(renderer, board[y][x].color[0], board[y][x].color[1], board[y][x].color[2], 255);
                 SDL_RenderFillRect(renderer, &block);
             }
         }
     }
 
     // Draw the current Tetromino
-    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
+    SDL_SetRenderDrawColor(renderer, currentTetromino->color[0], currentTetromino->color[1], currentTetromino->color[2], 255);
     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < 4; j++)
@@ -200,7 +221,7 @@ bool canMove(int dx, int dy)
                 int newX = currentTetromino->x + j + dx;
                 int newY = currentTetromino->y + i + dy;
 
-                if (newX < 0 || newX >= BOARD_WIDTH || newY >= BOARD_HEIGHT || board[newY][newX])
+                if (newX < 0 || newX >= BOARD_WIDTH || newY >= BOARD_HEIGHT || board[newY][newX].occupied)
                     return false;
             }
         }
@@ -218,6 +239,9 @@ Tetromino* rotateTetrominoLeft() {
 
     tempTetromino->x = currentTetromino->x;
     tempTetromino->y = currentTetromino->y;
+    tempTetromino->color[0] = currentTetromino->color[0];
+    tempTetromino->color[1] = currentTetromino->color[1];
+    tempTetromino->color[2] = currentTetromino->color[2];
 
     for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++) {
         for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++) {
@@ -234,6 +258,13 @@ char valueinarray(int val, int *arr, size_t n) {
             return 1;
     }
     return 0;
+}
+
+void setCellColor(int x, int y, int r, int g, int b)
+{
+    board[x][y].color[0] = r;
+    board[x][y].color[1] = g;
+    board[x][y].color[2] = b;
 }
 
 void placeTetromino()
@@ -253,7 +284,14 @@ void placeTetromino()
                 nbOfCheckedLines++;
             }
 
-            board[currentTetromino->y + i][currentTetromino->x + j] = 1;
+            board[currentTetromino->y + i][currentTetromino->x + j].occupied = 1;
+            setCellColor(
+                currentTetromino->y + i,
+                currentTetromino->x + j,
+                currentTetromino->color[0],
+                currentTetromino->color[1],
+                currentTetromino->color[2]
+            );
         }
     }
 
@@ -283,26 +321,22 @@ void moveTetromino(int dx, int dy)
 
 char checkLineFull(int row)
 {
-    printf("%d\n", row);
     for (int i = 0; i < BOARD_WIDTH; i++) {
-        printf("%d ", board[row][i]);
-        if (!board[row][i]) {
-            printf("\n");
+        if (!board[row][i].occupied) {
             return 0;
         }
     }
-    printf("\n");
     return 1;
 }
 
 void clearLine(int row)
 {
     for (int i = 0; i < BOARD_WIDTH; i++) {
-        board[row][i] = 0;
+        board[row][i].occupied = 0;
     }
 
     for (int i = row; i > 0; i--) {
-        int * tmp = board[i - 1];
+        Cell * tmp = board[i - 1];
         board[i] = board[i - 1];
         board[i - 1] = tmp;
     }

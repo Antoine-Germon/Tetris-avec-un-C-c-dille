@@ -9,7 +9,12 @@
 #define BLOCK_SIZE 15
 #define TETROMINO_SHAPE_BOX_SIZE 4
 
-int ** board;
+typedef struct {
+    int occupied;
+    int color[3];
+} Cell;
+
+Cell ** board;
 
 SDL_Window* pWindow = NULL;
 SDL_Renderer* renderer = NULL;
@@ -17,6 +22,7 @@ SDL_Renderer* renderer = NULL;
 typedef struct {
     int x, y;
     int shape[TETROMINO_SHAPE_BOX_SIZE][TETROMINO_SHAPE_BOX_SIZE];
+    int color[3];
 } Tetromino;
 
 void init();
@@ -38,3 +44,5 @@ char checkLineFull(int row);
 void clearLine(int row);
 
 char valueinarray(int val, int *arr, size_t n);
+
+void setCellColor(int x, int y, int r, int g, int b);
