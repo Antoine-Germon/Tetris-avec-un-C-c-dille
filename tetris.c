@@ -166,6 +166,26 @@ void init()
     renderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED);
 }
 
+void drawBlock(int x, int y, int color[]) {
+    SDL_Rect outsideBlock = { x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE };
+
+    int r = color[0];
+    int g = color[1];
+    int b = color[2];
+
+    SDL_SetRenderDrawColor(renderer, r - r * 0.25, g - g * 0.25, b - b * 0.25, 255);
+
+    SDL_RenderFillRect(renderer, &outsideBlock);
+
+    double offset = 0.6;
+
+    SDL_Rect insideBlock = { x * BLOCK_SIZE + (BLOCK_SIZE * (1 - offset) / 2), y * BLOCK_SIZE + (BLOCK_SIZE * (1 - offset) / 2), BLOCK_SIZE * offset, BLOCK_SIZE * offset };
+
+    SDL_SetRenderDrawColor(renderer, r, g, b, 255);
+
+    SDL_RenderFillRect(renderer, &insideBlock);
+}
+
 void draw()
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -180,9 +200,7 @@ void draw()
         {
             if (board[y][x].occupied)
             {
-                SDL_Rect block = { x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE };
-                SDL_SetRenderDrawColor(renderer, board[y][x].color[0], board[y][x].color[1], board[y][x].color[2], 255);
-                SDL_RenderFillRect(renderer, &block);
+                drawBlock(x, y, board[y][x].color);
             }
         }
     }
@@ -195,13 +213,14 @@ void draw()
         {
             if (currentTetromino->shape[i][j])
             {
-                SDL_Rect block = {
+                drawBlock(currentTetromino->x + j, currentTetromino->y + i, currentTetromino->color);
+                /* SDL_Rect block = {
                     (currentTetromino->x + j) * BLOCK_SIZE,
                     (currentTetromino->y + i) * BLOCK_SIZE,
                     BLOCK_SIZE,
                     BLOCK_SIZE
                 };
-                SDL_RenderFillRect(renderer, &block);
+                SDL_RenderFillRect(renderer, &block); */
             }
         }
     }

@@ -6,7 +6,7 @@
 
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
-#define BLOCK_SIZE 15
+#define BLOCK_SIZE 30
 #define TETROMINO_SHAPE_BOX_SIZE 4
 
 typedef struct {
@@ -28,6 +28,8 @@ typedef struct {
 void init();
 
 void draw();
+
+void drawBlock(int x, int y, int color[]);
 
 bool canMove(int dx, int dy);
 
