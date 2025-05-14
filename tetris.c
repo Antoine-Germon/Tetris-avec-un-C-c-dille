@@ -65,8 +65,10 @@ int main(int argc, char** argv)
     init();
 
     Board * playerBoard = createBoard(0, 0);
+    Board * botBoard = createBoard(20, 0);
 
     playerBoard->currentTetromino = getRandomTetromino();
+    botBoard->currentTetromino = getRandomTetromino();
 
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
@@ -109,10 +111,18 @@ int main(int argc, char** argv)
         if (SDL_GetTicks() - lastFallTime > 500)
         {
             moveTetromino(playerBoard, 0, 1);
+            moveTetromino(botBoard, 0, 1);
             lastFallTime = SDL_GetTicks();
         }
 
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);    
+
         draw(playerBoard);
+        draw(botBoard);
+
+        SDL_RenderPresent(renderer);
+
         SDL_Delay(50);
     }
 
@@ -121,6 +131,7 @@ int main(int argc, char** argv)
     SDL_Quit();
     
     freeBoard(playerBoard);
+    freeBoard(botBoard);
 
     return 0;
 }
@@ -132,7 +143,15 @@ void init()
         exit(EXIT_FAILURE);
     }
 
-    pWindow = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE, SDL_WINDOW_SHOWN);
+    pWindow = SDL_CreateWindow(
+        "Tetris",
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        BOARD_WIDTH * BLOCK_SIZE * 3,
+        (BOARD_HEIGHT + 10) * BLOCK_SIZE,
+        SDL_WINDOW_SHOWN
+    );
+    
     renderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED);
 }
 
@@ -158,10 +177,10 @@ void drawBlock(int x, int y, int color[]) {
 
 void draw(Board * board)
 {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-    SDL_RenderClear(renderer);
-
     //SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    int offsetX = board->x;
+    int offsetY = board->y;
     
     // Draw board
     for (int y = 0; y < BOARD_HEIGHT; y++)
@@ -170,7 +189,7 @@ void draw(Board * board)
         {
             if (board->gameBoard[y][x].occupied)
             {
-                drawBlock(x, y, board->gameBoard[y][x].color);
+                drawBlock(offsetX + x, offsetY + y, board->gameBoard[y][x].color);
             }
         }
     }
@@ -185,7 +204,7 @@ void draw(Board * board)
         {
             if (currentTetromino->shape[i][j])
             {
-                drawBlock(currentTetromino->x + j, currentTetromino->y + i, currentTetromino->color);
+                drawBlock(currentTetromino->x + j + offsetX, currentTetromino->y + i + offsetY, currentTetromino->color);
                 /* SDL_Rect block = {
                     (currentTetromino->x + j) * BLOCK_SIZE,
                     (currentTetromino->y + i) * BLOCK_SIZE,
@@ -196,8 +215,6 @@ void draw(Board * board)
             }
         }
     }
-
-    SDL_RenderPresent(renderer);
 }
 
 // Move the tetromino down
