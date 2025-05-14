@@ -14,37 +14,48 @@ typedef struct {
     int color[3];
 } Cell;
 
-Cell ** board;
-
-SDL_Window* pWindow = NULL;
-SDL_Renderer* renderer = NULL;
-
 typedef struct {
     int x, y;
     int shape[TETROMINO_SHAPE_BOX_SIZE][TETROMINO_SHAPE_BOX_SIZE];
     int color[3];
 } Tetromino;
 
+typedef struct {
+    int x, y;
+    Tetromino* currentTetromino;
+    Cell ** gameBoard;
+} Board;
+
+Board * playerBoard;
+Board * computerBoard;
+
+SDL_Window* pWindow = NULL;
+SDL_Renderer* renderer = NULL;
+
 void init();
 
-void draw();
+void draw(Board * board);
 
 void drawBlock(int x, int y, int color[]);
 
-bool canMove(int dx, int dy);
+bool canMove(Board * board, int dx, int dy);
 
 Tetromino* getRandomTetromino();
 
-Tetromino* rotateTetrominoLeft();
+Tetromino* rotateTetrominoLeft(Board * board);
 
-void placeTetromino();
+void placeTetromino(Board * board);
 
-void moveTetromino(int dx, int dy);
+void moveTetromino(Board * board, int dx, int dy);
 
-char checkLineFull(int row);
+char checkLineFull(Board * board, int row);
 
-void clearLine(int row);
+void clearLine(Board * board, int row);
 
 char valueinarray(int val, int *arr, size_t n);
 
-void setCellColor(int x, int y, int r, int g, int b);
+void setCellColor(Board * board, int x, int y, int r, int g, int b);
+
+Board * createBoard(int x, int y);
+
+void freeBoard(Board * board);
