@@ -9,7 +9,8 @@
 #define BLOCK_SIZE 30
 #define TETROMINO_SHAPE_BOX_SIZE 4
 
-typedef struct {
+typedef struct
+{
     int occupied;
     int color[3];
 } Cell;
@@ -40,9 +41,14 @@ void drawBlock(int x, int y, int color[]);
 
 bool canMove(Board * board, int dx, int dy);
 
-Tetromino* getRandomTetromino();
+Tetromino *getRandomTetromino();
 
 Tetromino* rotateTetrominoLeft(Board * board);
+
+void moveTetrominoInbound();
+void moveInboundLeft();
+void moveInboundRight();
+void moveInboundUp();
 
 void placeTetromino(Board * board);
 

@@ -2,63 +2,28 @@
 
 Tetromino tetrominos[] = {
     // Square
-    { .x = 3, .y = 0, .shape = {
-        {0, 0, 0, 0},
-        {0, 1, 1, 0},
-        {0, 1, 1, 0},
-        {0, 0, 0, 0}
-    }, .color = {255, 255, 0}}, // Yellow
+    {.x = 3, .y = 0, .shape = {{0, 0, 0, 0}, {0, 1, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}}, .color = {255, 255, 0}}, // Yellow
 
     // Line
-    { .x = 3, .y = 0, .shape = {
-        {0, 1, 0, 0},
-        {0, 1, 0, 0},
-        {0, 1, 0, 0},
-        {0, 1, 0, 0}
-    }, .color = {0, 255, 255}}, // Cyan
+    {.x = 3, .y = 0, .shape = {{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 0, 0}}, .color = {0, 255, 255}}, // Cyan
 
     // T-shape
-    { .x = 3, .y = 0, .shape = {
-        {0, 0, 0, 0},
-        {0, 1, 0, 0},
-        {1, 1, 1, 0},
-        {0, 0, 0, 0}
-    }, .color = {128, 0, 128}}, // Purple
+    {.x = 3, .y = 0, .shape = {{0, 0, 0, 0}, {0, 1, 0, 0}, {1, 1, 1, 0}, {0, 0, 0, 0}}, .color = {128, 0, 128}}, // Purple
 
     // L-shape
-    { .x = 3, .y = 0, .shape = {
-        {0, 1, 0, 0},
-        {0, 1, 0, 0},
-        {0, 1, 1, 0},
-        {0, 0, 0, 0}
-    }, .color = {255, 165, 0}}, // Orange
+    {.x = 3, .y = 0, .shape = {{0, 1, 0, 0}, {0, 1, 0, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}}, .color = {255, 165, 0}}, // Orange
 
     // Reverse L-shape
-    { .x = 3, .y = 0, .shape = {
-        {0, 0, 1, 0},
-        {0, 0, 1, 0},
-        {0, 1, 1, 0},
-        {0, 0, 0, 0}
-    }, .color = {0, 0, 255}}, // Blue
+    {.x = 3, .y = 0, .shape = {{0, 0, 1, 0}, {0, 0, 1, 0}, {0, 1, 1, 0}, {0, 0, 0, 0}}, .color = {0, 0, 255}}, // Blue
 
     // Z-shape
-    { .x = 3, .y = 0, .shape = {
-        {0, 0, 0, 0},
-        {0, 1, 1, 0},
-        {0, 0, 1, 1},
-        {0, 0, 0, 0}
-    }, .color = {255, 0, 0}}, // Red
+    {.x = 3, .y = 0, .shape = {{0, 0, 0, 0}, {0, 1, 1, 0}, {0, 0, 1, 1}, {0, 0, 0, 0}}, .color = {255, 0, 0}}, // Red
 
     // Reverse Z-shape
-    { .x = 3, .y = 0, .shape = {
-        {0, 0, 0, 0},
-        {0, 1, 1, 0},
-        {1, 1, 0, 0},
-        {0, 0, 0, 0}
-    }, .color = {0, 255, 0}} // Green
+    {.x = 3, .y = 0, .shape = {{0, 0, 0, 0}, {0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}}, .color = {0, 255, 0}} // Green
 };
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     srand(time(NULL));
 
@@ -97,6 +62,7 @@ int main(int argc, char** argv)
                         break;
                     case SDLK_r:
                         playerBoard->currentTetromino = rotateTetrominoLeft(playerBoard);
+                        moveTetrominoInbound(playerBoard);
                         break;
                     case SDLK_ESCAPE:
                         quit = true;
@@ -155,8 +121,9 @@ void init()
     renderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED);
 }
 
-void drawBlock(int x, int y, int color[]) {
-    SDL_Rect outsideBlock = { x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE };
+void drawBlock(int x, int y, int color[])
+{
+    SDL_Rect outsideBlock = {x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
 
     int r = color[0];
     int g = color[1];
@@ -168,7 +135,7 @@ void drawBlock(int x, int y, int color[]) {
 
     double offset = 0.6;
 
-    SDL_Rect insideBlock = { x * BLOCK_SIZE + (BLOCK_SIZE * (1 - offset) / 2), y * BLOCK_SIZE + (BLOCK_SIZE * (1 - offset) / 2), BLOCK_SIZE * offset, BLOCK_SIZE * offset };
+    SDL_Rect insideBlock = {x * BLOCK_SIZE + (BLOCK_SIZE * (1 - offset) / 2), y * BLOCK_SIZE + (BLOCK_SIZE * (1 - offset) / 2), BLOCK_SIZE * offset, BLOCK_SIZE * offset};
 
     SDL_SetRenderDrawColor(renderer, r, g, b, 255);
 
@@ -237,7 +204,8 @@ bool canMove(Board * board, int dx, int dy)
     return true;
 }
 
-Tetromino* getRandomTetromino() {
+Tetromino *getRandomTetromino()
+{
     int index = rand() % (sizeof(tetrominos) / sizeof(Tetromino));
     return &tetrominos[index];
 }
@@ -260,9 +228,78 @@ Tetromino* rotateTetrominoLeft(Board * board) {
     return tempTetromino;
 }
 
-char valueinarray(int val, int *arr, size_t n) {
-    for(size_t i = 0; i < n; i++) {
-        if(arr[i] == val)
+void moveTetrominoInbound(Board * board)
+{
+    Tetromino * currentTetromino = board->currentTetromino;
+
+    if (currentTetromino->x < 0)
+    {
+        moveInboundLeft(board);
+    }
+    else if (currentTetromino->x + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_WIDTH)
+    {
+        moveInboundRight(board);
+    }
+    if (currentTetromino->y + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_HEIGHT)
+    {
+        moveInboundUp(board);
+    }
+}
+
+void moveInboundLeft(Board * board)
+{
+    Tetromino * currentTetromino = board->currentTetromino;
+
+    for (int i = 0; i + currentTetromino->x < 0; i++)
+    {
+        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
+        {
+            if (currentTetromino->shape[j][i] == 1)
+            {
+                currentTetromino->x -= currentTetromino->x - i;
+                return;
+            }
+        }
+    }
+}
+
+void moveInboundRight(Board * board)
+{
+    Tetromino * currentTetromino = board->currentTetromino;
+
+    for (int i = TETROMINO_SHAPE_BOX_SIZE - 1; i + currentTetromino->x >= BOARD_WIDTH; i--)
+    {
+        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
+        {
+            if (currentTetromino->shape[j][i] == 1)
+            {
+                currentTetromino->x = BOARD_WIDTH - i - 1;
+                return;
+            }
+        }
+    }
+}
+void moveInboundUp(Board * board)
+{
+    Tetromino * currentTetromino = board->currentTetromino;
+
+    for (int j = TETROMINO_SHAPE_BOX_SIZE - 1; j + currentTetromino->y >= BOARD_HEIGHT; j--)
+    {
+        for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
+        {
+            if (currentTetromino->shape[j][i] == 1)
+            {
+                currentTetromino->y = BOARD_HEIGHT - j - 1;
+                return;
+            }
+        }
+    }
+}
+char valueinarray(int val, int *arr, size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        if (arr[i] == val)
             return 1;
     }
     return 0;
@@ -334,11 +371,12 @@ void placeTetromino(Board * board)
     for (int i = 0; i < 4; i++)
     {
         for (int j = 0; j < 4; j++)
-        {   
+        {
             if (!currentTetromino->shape[i][j])
                 continue;
 
-            if (!valueinarray(currentTetromino->y + i, checkedLines, BOARD_HEIGHT)) {
+            if (!valueinarray(currentTetromino->y + i, checkedLines, BOARD_HEIGHT))
+            {
                 checkedLines[nbOfCheckedLines] = currentTetromino->y + i;
                 nbOfCheckedLines++;
             }
@@ -350,12 +388,12 @@ void placeTetromino(Board * board)
                 currentTetromino->x + j,
                 currentTetromino->color[0],
                 currentTetromino->color[1],
-                currentTetromino->color[2]
-            );
+                currentTetromino->color[2]);
         }
     }
 
-    for (int i = 0; i < nbOfCheckedLines; i++) {
+    for (int i = 0; i < nbOfCheckedLines; i++)
+    {
         int row = checkedLines[i];
         char lineFull = checkLineFull(board, row);
         if (lineFull) clearLine(board, row);
