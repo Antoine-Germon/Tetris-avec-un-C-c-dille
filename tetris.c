@@ -143,7 +143,31 @@ void init()
     }
 
     pWindow = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE, SDL_WINDOW_SHOWN);
+    if (!pWindow)
+    {
+        printf("SDL_CreateWindow failed: %s\n", SDL_GetError());
+        // Libération de la mémoire avant de quitter
+        for (int i = 0; i < BOARD_HEIGHT; i++)
+        {
+            free(board[i]);
+        }
+        free(board);
+        SDL_Quit();
+        exit(EXIT_FAILURE);
+    }
     renderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer)
+    {
+        printf("SDL_CreateRenderer failed: %s\n", SDL_GetError());
+        SDL_DestroyWindow(pWindow); // Nettoyer pWindow s'il a été créé avec succès
+        for (int i = 0; i < BOARD_HEIGHT; i++)
+        {
+            free(board[i]);
+        }
+        free(board);
+        SDL_Quit();
+        exit(EXIT_FAILURE);
+    }
 }
 
 void drawBlock(int x, int y, int color[])
@@ -232,7 +256,16 @@ bool canMove(int dx, int dy)
 Tetromino *getRandomTetromino()
 {
     int index = rand() % (sizeof(tetrominos) / sizeof(Tetromino));
-    return &tetrominos[index];
+    Tetromino *copy = malloc(sizeof(Tetromino));
+    if (!copy)
+    {
+        printf("Failed to allocate memory for Tetromino copy\n");
+        exit(EXIT_FAILURE);
+    }
+
+    *copy = tetrominos[index]; // Copie complète (shallow copy)
+
+    return copy;
 }
 
 Tetromino *rotateTetrominoLeft()
