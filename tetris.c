@@ -59,9 +59,19 @@ int main(int argc, char **argv)
                     moveTetromino(0, 1);
                     break;
                 case SDLK_r:
-                    currentTetromino = rotateTetrominoLeft();
-                    moveTetrominoInbound();
+                {
+                    Tetromino *rotated = rotateTetrominoLeft();
+                    if (rotated != currentTetromino)
+                    {
+                        free(currentTetromino);
+                        currentTetromino = rotated;
+                    }
+                    else
+                    {
+                        free(rotated); // Important si tu fais un malloc() inutilement dans tous les cas
+                    }
                     break;
+                }
                 case SDLK_ESCAPE:
                     quit = true;
                     break;
@@ -133,7 +143,31 @@ void init()
     }
 
     pWindow = SDL_CreateWindow("Tetris", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, BOARD_WIDTH * BLOCK_SIZE, BOARD_HEIGHT * BLOCK_SIZE, SDL_WINDOW_SHOWN);
+    if (!pWindow)
+    {
+        printf("SDL_CreateWindow failed: %s\n", SDL_GetError());
+        // Libération de la mémoire avant de quitter
+        for (int i = 0; i < BOARD_HEIGHT; i++)
+        {
+            free(board[i]);
+        }
+        free(board);
+        SDL_Quit();
+        exit(EXIT_FAILURE);
+    }
     renderer = SDL_CreateRenderer(pWindow, -1, SDL_RENDERER_ACCELERATED);
+    if (!renderer)
+    {
+        printf("SDL_CreateRenderer failed: %s\n", SDL_GetError());
+        SDL_DestroyWindow(pWindow); // Nettoyer pWindow s'il a été créé avec succès
+        for (int i = 0; i < BOARD_HEIGHT; i++)
+        {
+            free(board[i]);
+        }
+        free(board);
+        SDL_Quit();
+        exit(EXIT_FAILURE);
+    }
 }
 
 void drawBlock(int x, int y, int color[])
@@ -222,7 +256,16 @@ bool canMove(int dx, int dy)
 Tetromino *getRandomTetromino()
 {
     int index = rand() % (sizeof(tetrominos) / sizeof(Tetromino));
-    return &tetrominos[index];
+    Tetromino *copy = malloc(sizeof(Tetromino));
+    if (!copy)
+    {
+        printf("Failed to allocate memory for Tetromino copy\n");
+        exit(EXIT_FAILURE);
+    }
+
+    *copy = tetrominos[index]; // Copie complète (shallow copy)
+
+    return copy;
 }
 
 Tetromino *rotateTetrominoLeft()
@@ -242,64 +285,120 @@ Tetromino *rotateTetrominoLeft()
             tempTetromino->shape[i][j] = currentTetromino->shape[j][TETROMINO_SHAPE_BOX_SIZE - i - 1];
         }
     }
-
-    return tempTetromino;
-}
-
-void moveTetrominoInbound()
-{
-    if (currentTetromino->x < 0)
+    moveTetrominoOutOfBlock(tempTetromino);
+    moveTetrominoInbound(tempTetromino);
+    int canRotate = checkLegalRotation(tempTetromino);
+    if (canRotate == 1)
     {
-        moveInboundLeft();
+        return tempTetromino;
     }
-    else if (currentTetromino->x + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_WIDTH)
+    else
     {
-        moveInboundRight();
-    }
-    if (currentTetromino->y + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_HEIGHT)
-    {
-        moveInboundUp();
+        return currentTetromino;
     }
 }
-
-void moveInboundLeft()
+int checkLegalRotation(Tetromino *tetromino)
 {
-    for (int i = 0; i + currentTetromino->x < 0; i++)
+    int posX = tetromino->x;
+    int posY = tetromino->y;
+    for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
     {
         for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
         {
-            if (currentTetromino->shape[j][i] == 1)
+            if (posY + j < BOARD_HEIGHT && posX + i < BOARD_WIDTH)
             {
-                currentTetromino->x -= currentTetromino->x - i;
+
+                if (board[posY + j][posX + i].occupied == 1 && tetromino->shape[j][i] == 1)
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+    return 1;
+}
+void moveTetrominoOutOfBlock(Tetromino *tetromino)
+{
+    int posX = tetromino->x;
+    int posY = tetromino->y;
+    for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
+    {
+        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
+        {
+            if (posY + j < BOARD_HEIGHT && posX + i < BOARD_WIDTH)
+            {
+                if (board[posY + j][posX + i].occupied == 1 && tetromino->shape[j][i] == 1)
+                {
+                    if (i < 2)
+                    {
+                        tetromino->x = i;
+                        return;
+                    }
+                    else
+                    {
+                        tetromino->x -= i;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void moveTetrominoInbound(Tetromino *tetromino)
+{
+    if (tetromino->x < 0)
+    {
+        moveInboundLeft(tetromino);
+    }
+    else if (tetromino->x + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_WIDTH)
+    {
+        moveInboundRight(tetromino);
+    }
+    if (tetromino->y + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_HEIGHT)
+    {
+        moveInboundUp(tetromino);
+    }
+}
+
+void moveInboundLeft(Tetromino *tetromino)
+{
+    for (int i = 0; i + tetromino->x < 0; i++)
+    {
+        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
+        {
+            if (tetromino->shape[j][i] == 1)
+            {
+                tetromino->x = i;
                 return;
             }
         }
     }
 }
 
-void moveInboundRight()
+void moveInboundRight(Tetromino *tetromino)
 {
-    for (int i = TETROMINO_SHAPE_BOX_SIZE - 1; i + currentTetromino->x >= BOARD_WIDTH; i--)
+    for (int i = TETROMINO_SHAPE_BOX_SIZE - 1; i + tetromino->x >= BOARD_WIDTH; i--)
     {
         for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
         {
-            if (currentTetromino->shape[j][i] == 1)
+            if (tetromino->shape[j][i] == 1)
             {
-                currentTetromino->x = BOARD_WIDTH - i - 1;
+                tetromino->x = BOARD_WIDTH - i - 1;
                 return;
             }
         }
     }
 }
-void moveInboundUp()
+void moveInboundUp(Tetromino *tetromino)
 {
-    for (int j = TETROMINO_SHAPE_BOX_SIZE - 1; j + currentTetromino->y >= BOARD_HEIGHT; j--)
+    for (int j = TETROMINO_SHAPE_BOX_SIZE - 1; j + tetromino->y >= BOARD_HEIGHT; j--)
     {
         for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
         {
-            if (currentTetromino->shape[j][i] == 1)
+            if (tetromino->shape[j][i] == 1)
             {
-                currentTetromino->y = BOARD_HEIGHT - j - 1;
+                tetromino->y = BOARD_HEIGHT - j - 1;
                 return;
             }
         }

@@ -38,10 +38,14 @@ bool canMove(int dx, int dy);
 Tetromino *getRandomTetromino();
 
 Tetromino *rotateTetrominoLeft();
-void moveTetrominoInbound();
-void moveInboundLeft();
-void moveInboundRight();
-void moveInboundUp();
+int isPositionValid(Tetromino *tetromino);
+
+int checkLegalRotation(Tetromino *tetromino);
+void moveTetrominoOutOfBlock(Tetromino *tetromino);
+void moveTetrominoInbound(Tetromino *tetromino);
+void moveInboundLeft(Tetromino *tetromino);
+void moveInboundRight(Tetromino *tetromino);
+void moveInboundUp(Tetromino *tetromino);
 
 void placeTetromino();
 
