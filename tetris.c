@@ -149,14 +149,14 @@ int main(int argc, char** argv)
 
     init();
 
-    fontTexture = loadFontTexture("./ascii.bmp");
+    /* fontTexture = loadFontTexture("./ascii.bmp");
 
     if (!fontTexture) {
         printf("Erreur : fontTexture NULL\n");
         return 1;
     }
     
-    showMainMenu();
+    showMainMenu(); */
     
     Board * playerBoard = createBoard(0, 0);
     Board * botBoard = createBoard(20, 0);
