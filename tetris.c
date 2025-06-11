@@ -32,9 +32,10 @@ int main(int argc, char **argv)
     Board * playerBoard = createBoard(0, 0);
     Board * botBoard = createBoard(20, 0);
 
+    
     playerBoard->currentTetromino = getRandomTetromino();
     botBoard->currentTetromino = getRandomTetromino();
-
+    
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
 
@@ -51,24 +52,34 @@ int main(int argc, char **argv)
             {
                 switch (event.key.keysym.sym)
                 {
-                    case SDLK_LEFT:
-                        moveTetromino(playerBoard, -1, 0);
-                        break;
-                    case SDLK_RIGHT:
-                        moveTetromino(playerBoard, 1, 0);
-                        break;
-                    case SDLK_DOWN:
-                        moveTetromino(playerBoard, 0, 1);
-                        break;
-                    case SDLK_r:
-                        playerBoard->currentTetromino = rotateTetrominoLeft(playerBoard);
-                        moveTetrominoInbound(playerBoard);
-                        break;
-                    case SDLK_ESCAPE:
-                        quit = true;
-                        break;
-                    default:
-                        break;
+                case SDLK_LEFT:
+                    moveTetromino(playerBoard, -1, 0);
+                    break;
+                case SDLK_RIGHT:
+                    moveTetromino(playerBoard, 1, 0);
+                    break;
+                case SDLK_DOWN:
+                    moveTetromino(playerBoard, 0, 1);
+                    break;
+                case SDLK_r:
+                {
+                    Tetromino *rotated = rotateTetrominoLeft(playerBoard);
+                    if (rotated != playerBoard->currentTetromino)
+                    {
+                        free(playerBoard->currentTetromino);
+                        playerBoard->currentTetromino = rotated;
+                    }
+                    else
+                    {
+                        free(rotated); // Important si tu fais un malloc() inutilement dans tous les cas
+                    }
+                    break;
+                }
+                case SDLK_ESCAPE:
+                    quit = true;
+                    break;
+                default:
+                    break;
                 }
             }
         }
@@ -207,7 +218,16 @@ bool canMove(Board * board, int dx, int dy)
 Tetromino *getRandomTetromino()
 {
     int index = rand() % (sizeof(tetrominos) / sizeof(Tetromino));
-    return &tetrominos[index];
+    Tetromino *copy = malloc(sizeof(Tetromino));
+    if (!copy)
+    {
+        printf("Failed to allocate memory for Tetromino copy\n");
+        exit(EXIT_FAILURE);
+    }
+
+    *copy = tetrominos[index]; // Copie complète (shallow copy)
+
+    return copy;
 }
 
 Tetromino* rotateTetrominoLeft(Board * board) {
@@ -224,72 +244,120 @@ Tetromino* rotateTetrominoLeft(Board * board) {
             tempTetromino->shape[i][j] = board->currentTetromino->shape[j][TETROMINO_SHAPE_BOX_SIZE - i - 1];
         }
     }
-
-    return tempTetromino;
-}
-
-void moveTetrominoInbound(Board * board)
-{
-    Tetromino * currentTetromino = board->currentTetromino;
-
-    if (currentTetromino->x < 0)
+    moveTetrominoOutOfBlock(board, tempTetromino);
+    moveTetrominoInbound(tempTetromino);
+    int canRotate = checkLegalRotation(board, tempTetromino);
+    if (canRotate == 1)
     {
-        moveInboundLeft(board);
+        return tempTetromino;
     }
-    else if (currentTetromino->x + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_WIDTH)
+    else
     {
-        moveInboundRight(board);
-    }
-    if (currentTetromino->y + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_HEIGHT)
-    {
-        moveInboundUp(board);
+        return board->currentTetromino;
     }
 }
-
-void moveInboundLeft(Board * board)
+int checkLegalRotation(Board * board, Tetromino *tetromino)
 {
-    Tetromino * currentTetromino = board->currentTetromino;
-
-    for (int i = 0; i + currentTetromino->x < 0; i++)
+    int posX = tetromino->x;
+    int posY = tetromino->y;
+    for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
     {
         for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
         {
-            if (currentTetromino->shape[j][i] == 1)
+            if (posY + j < BOARD_HEIGHT && posX + i < BOARD_WIDTH)
             {
-                currentTetromino->x -= currentTetromino->x - i;
+
+                if (board->gameBoard[posY + j][posX + i].occupied == 1 && tetromino->shape[j][i] == 1)
+                {
+                    return 0;
+                }
+            }
+        }
+    }
+    return 1;
+}
+void moveTetrominoOutOfBlock(Board * board, Tetromino *tetromino)
+{
+    int posX = tetromino->x;
+    int posY = tetromino->y;
+    for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
+    {
+        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
+        {
+            if (posY + j < BOARD_HEIGHT && posX + i < BOARD_WIDTH)
+            {
+                if (board->gameBoard[posY + j][posX + i].occupied == 1 && tetromino->shape[j][i] == 1)
+                {
+                    if (i < 2)
+                    {
+                        tetromino->x = i;
+                        return;
+                    }
+                    else
+                    {
+                        tetromino->x -= i;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void moveTetrominoInbound(Tetromino *tetromino)
+{
+    if (tetromino->x < 0)
+    {
+        moveInboundLeft(tetromino);
+    }
+    else if (tetromino->x + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_WIDTH)
+    {
+        moveInboundRight(tetromino);
+    }
+    if (tetromino->y + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_HEIGHT)
+    {
+        moveInboundUp(tetromino);
+    }
+}
+
+void moveInboundLeft(Tetromino *tetromino)
+{
+    for (int i = 0; i + tetromino->x < 0; i++)
+    {
+        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
+        {
+            if (tetromino->shape[j][i] == 1)
+            {
+                tetromino->x = i;
                 return;
             }
         }
     }
 }
 
-void moveInboundRight(Board * board)
+void moveInboundRight(Tetromino *tetromino)
 {
-    Tetromino * currentTetromino = board->currentTetromino;
-
-    for (int i = TETROMINO_SHAPE_BOX_SIZE - 1; i + currentTetromino->x >= BOARD_WIDTH; i--)
+    for (int i = TETROMINO_SHAPE_BOX_SIZE - 1; i + tetromino->x >= BOARD_WIDTH; i--)
     {
         for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
         {
-            if (currentTetromino->shape[j][i] == 1)
+            if (tetromino->shape[j][i] == 1)
             {
-                currentTetromino->x = BOARD_WIDTH - i - 1;
+                tetromino->x = BOARD_WIDTH - i - 1;
                 return;
             }
         }
     }
 }
-void moveInboundUp(Board * board)
+void moveInboundUp(Tetromino *tetromino)
 {
-    Tetromino * currentTetromino = board->currentTetromino;
-
-    for (int j = TETROMINO_SHAPE_BOX_SIZE - 1; j + currentTetromino->y >= BOARD_HEIGHT; j--)
+    for (int j = TETROMINO_SHAPE_BOX_SIZE - 1; j + tetromino->y >= BOARD_HEIGHT; j--)
     {
         for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
         {
-            if (currentTetromino->shape[j][i] == 1)
+            if (tetromino->shape[j][i] == 1)
             {
-                currentTetromino->y = BOARD_HEIGHT - j - 1;
+                tetromino->y = BOARD_HEIGHT - j - 1;
                 return;
             }
         }
