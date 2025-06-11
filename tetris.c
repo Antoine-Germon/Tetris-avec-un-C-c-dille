@@ -23,15 +23,143 @@ Tetromino tetrominos[] = {
     {.x = 3, .y = 0, .shape = {{0, 0, 0, 0}, {0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}}, .color = {0, 255, 0}} // Green
 };
 
-int main(int argc, char **argv)
+#define CHAR_WIDTH 16
+#define CHAR_HEIGHT 32
+
+SDL_Texture* fontTexture = NULL;
+
+// Charge l'image ascii.bmp
+SDL_Texture* loadFontTexture(const char* path) {
+    SDL_Surface* surface = SDL_LoadBMP(path);
+    if (!surface) {
+        printf("Erreur chargement BMP: %s\n", SDL_GetError());
+        return NULL;
+    }
+    // Remplace le noir par transparent
+    Uint32 colorkey = SDL_MapRGB(surface->format, 0, 0, 0);
+    SDL_SetColorKey(surface, SDL_TRUE, colorkey);
+
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_FreeSurface(surface);
+    return texture;
+}
+
+// Affiche un seul caractère à l'écran
+void drawChar(unsigned char c, int x, int y, SDL_Color color) {
+    if (c < 32 || c > 127) return; // ou tu peux afficher un caractère "?"
+    int index = c - 32; // on commence à l'index 0
+    SDL_Rect srcRect = {
+        (index % 16) * CHAR_WIDTH,
+        (index / 16) * CHAR_HEIGHT,
+        CHAR_WIDTH,
+        CHAR_HEIGHT
+    };
+    SDL_Rect dstRect = { x, y, CHAR_WIDTH, CHAR_HEIGHT };
+    SDL_RenderCopy(renderer, fontTexture, &srcRect, &dstRect);
+}
+
+// Affiche une chaîne de caractères
+void drawText(const char* text, int x, int y, SDL_Color color) {
+    for (int i = 0; text[i] != '\0'; i++) {
+        drawChar(text[i], x + i * CHAR_WIDTH, y, color);
+    }
+}
+
+void updateButtonHover(MenuButton* button, int mouseX, int mouseY) {
+    bool inside = SDL_PointInRect(&(SDL_Point){mouseX, mouseY}, &button->rect);
+    button->hovered = inside;
+    button->currentColor = inside ? button->hoverColor : button->baseColor;
+}
+
+void drawButton(MenuButton* button) {
+    SDL_SetRenderDrawColor(renderer,
+        button->currentColor.r,
+        button->currentColor.g,
+        button->currentColor.b,
+        255);
+    SDL_RenderFillRect(renderer, &button->rect);
+
+    int len = 0;
+    if (button->text != NULL)
+        len = strlen(button->text);
+
+    int textX = button->rect.x + (button->rect.w - len * CHAR_WIDTH) / 2;
+    int textY = button->rect.y + (button->rect.h - CHAR_HEIGHT) / 2;
+
+    drawText(button->text, textX, textY, (SDL_Color){255, 255, 255});
+}
+
+// Main menu loop
+void showMainMenu() {
+    MenuButton soloButton = {
+        .rect = {WINDOW_WIDTH / 2 - 100, 200, 200, 50},
+        .text = "Jouer en solo",
+        .baseColor = {70, 130, 180},
+        .hoverColor = {100, 149, 237},
+        .currentColor = {70, 130, 180},
+        .hovered = false
+    };
+
+    MenuButton vsBotButton = {
+        .rect = {WINDOW_WIDTH / 2 - 100, 300, 200, 50},
+        .text = "Jouer contre IA",
+        .baseColor = {34, 139, 34},
+        .hoverColor = {60, 179, 113},
+        .currentColor = {34, 139, 34},
+        .hovered = false
+    };
+
+    bool running = true;
+    SDL_Event event;
+    int mouseX, mouseY;
+
+    while (running) {
+        SDL_GetMouseState(&mouseX, &mouseY);
+        updateButtonHover(&soloButton, mouseX, mouseY);
+        updateButtonHover(&vsBotButton, mouseX, mouseY);
+
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                return;
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                if (soloButton.hovered) {
+                    printf("Solo sélectionné\n");
+                    return;
+                } else if (vsBotButton.hovered) {
+                    printf("VS Bot sélectionné\n");
+                    return;
+                }
+            }
+        }
+
+        SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+        SDL_RenderClear(renderer);
+
+        drawButton(&soloButton);
+        drawButton(&vsBotButton);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16);
+    }
+}
+
+int main(int argc, char** argv)
 {
     srand(time(NULL));
 
     init();
 
+    fontTexture = loadFontTexture("./ascii.bmp");
+
+    if (!fontTexture) {
+        printf("Erreur : fontTexture NULL\n");
+        return 1;
+    }
+    
+    showMainMenu();
+    
     Board * playerBoard = createBoard(0, 0);
     Board * botBoard = createBoard(20, 0);
-
     
     playerBoard->currentTetromino = getRandomTetromino();
     botBoard->currentTetromino = getRandomTetromino();
@@ -103,6 +231,7 @@ int main(int argc, char **argv)
         SDL_Delay(50);
     }
 
+    SDL_DestroyTexture(fontTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(pWindow);
     SDL_Quit();
@@ -124,8 +253,8 @@ void init()
         "Tetris",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        BOARD_WIDTH * BLOCK_SIZE * 3,
-        (BOARD_HEIGHT + 10) * BLOCK_SIZE,
+        WINDOW_WIDTH,
+        WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN
     );
     
