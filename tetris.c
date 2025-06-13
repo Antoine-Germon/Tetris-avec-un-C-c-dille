@@ -123,10 +123,10 @@ void showMainMenu() {
                 return;
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 if (soloButton.hovered) {
-                    printf("Solo sélectionné\n");
+                    singleGame();
                     return;
                 } else if (vsBotButton.hovered) {
-                    printf("VS Bot sélectionné\n");
+                    botGame();
                     return;
                 }
             }
@@ -149,15 +149,97 @@ int main(int argc, char** argv)
 
     init();
 
-    /* fontTexture = loadFontTexture("./ascii.bmp");
+    fontTexture = loadFontTexture("./ascii.bmp");
 
     if (!fontTexture) {
         printf("Erreur : fontTexture NULL\n");
         return 1;
     }
     
-    showMainMenu(); */
+    showMainMenu();
+
+    return 0;
+}
+
+void singleGame() {
+    Board * playerBoard = createBoard(0, 0);
     
+    playerBoard->currentTetromino = getRandomTetromino();
+    
+    bool quit = false;
+    Uint32 lastFallTime = SDL_GetTicks();
+
+    while (!quit)
+    {
+        SDL_Event event;
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                quit = true;
+            }
+            else if (event.type == SDL_KEYDOWN)
+            {
+                switch (event.key.keysym.sym)
+                {
+                case SDLK_LEFT:
+                    moveTetromino(playerBoard, -1, 0);
+                    break;
+                case SDLK_RIGHT:
+                    moveTetromino(playerBoard, 1, 0);
+                    break;
+                case SDLK_DOWN:
+                    moveTetromino(playerBoard, 0, 1);
+                    break;
+                case SDLK_r:
+                {
+                    Tetromino *rotated = rotateTetrominoLeft(playerBoard);
+                    if (rotated != playerBoard->currentTetromino)
+                    {
+                        free(playerBoard->currentTetromino);
+                        playerBoard->currentTetromino = rotated;
+                    }
+                    else
+                    {
+                        free(rotated); // Important si tu fais un malloc() inutilement dans tous les cas
+                    }
+                    break;
+                }
+                case SDLK_ESCAPE:
+                    quit = true;
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+
+        // Move tetromino down every 500ms
+        if (SDL_GetTicks() - lastFallTime > 500)
+        {
+            moveTetromino(playerBoard, 0, 1);
+            lastFallTime = SDL_GetTicks();
+        }
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+        SDL_RenderClear(renderer);    
+
+        draw(playerBoard);
+
+        SDL_RenderPresent(renderer);
+
+        SDL_Delay(50);
+    }
+
+    SDL_DestroyTexture(fontTexture);
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(pWindow);
+    SDL_Quit();
+    
+    freeBoard(playerBoard);
+}
+
+void botGame() {
     Board * playerBoard = createBoard(0, 0);
     Board * botBoard = createBoard(20, 0);
     
@@ -238,8 +320,6 @@ int main(int argc, char** argv)
     
     freeBoard(playerBoard);
     freeBoard(botBoard);
-
-    return 0;
 }
 
 void init()
@@ -504,9 +584,9 @@ char valueinarray(int val, int *arr, size_t n)
 
 void setCellColor(Board * board, int x, int y, int r, int g, int b)
 {
-    board->gameBoard[x][y].color[0] = r;
-    board->gameBoard[x][y].color[1] = g;
-    board->gameBoard[x][y].color[2] = b;
+    board->gameBoard[y][x].color[0] = r;
+    board->gameBoard[y][x].color[1] = g;
+    board->gameBoard[y][x].color[2] = b;
 }
 
 Board * createBoard(int x, int y)

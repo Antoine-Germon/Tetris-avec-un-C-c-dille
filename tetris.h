@@ -51,6 +51,9 @@ SDL_Renderer* renderer = NULL;
 
 void init();
 
+void singleGame();
+void botGame();
+
 void draw(Board * board);
 
 void drawBlock(int x, int y, int color[]);
