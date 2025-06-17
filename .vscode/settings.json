@@ -4,6 +4,7 @@
         "stdbool.h": "c",
         "cstdlib": "c",
         "time.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "tetris.h": "c"
     }
 }
