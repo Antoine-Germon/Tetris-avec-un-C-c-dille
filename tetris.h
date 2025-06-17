@@ -10,11 +10,18 @@
 
 #define BOARD_WIDTH 10
 #define BOARD_HEIGHT 20
-#define WINDOW_WIDTH BOARD_WIDTH * BLOCK_SIZE * 3
+#define MULTIPLAYER_WINDOW_WIDTH BOARD_WIDTH * BLOCK_SIZE * 3
+#define SINGLEPLAYER_WINDOW_WIDTH BOARD_WIDTH * BLOCK_SIZE * 2
 #define WINDOW_HEIGHT (BOARD_HEIGHT + 10) * BLOCK_SIZE
 #define BLOCK_SIZE 30
 #define TETROMINO_SHAPE_BOX_SIZE 4
 #define COLOR_COMPONENTS 3
+
+#define CHAR_WIDTH 32
+#define CHAR_HEIGHT 32
+
+#define SPRITESHEET_COLS 16
+#define SPRITESHEET_ROWS 8
 
 typedef struct
 {
@@ -53,6 +60,18 @@ void init();
 
 void singleGame();
 void botGame();
+
+SDL_Texture* loadFontTexture(const char* path);
+
+SDL_Rect getCharSrcRect(unsigned char c);
+
+void drawChar(unsigned char c, int x, int y, SDL_Color color);
+
+void drawText(const char* text, int x, int y, SDL_Color color);
+void updateButtonHover(MenuButton* button, int mouseX, int mouseY);
+void drawButton(MenuButton* button);
+
+void showMainMenu();
 
 void draw(Board * board);
 

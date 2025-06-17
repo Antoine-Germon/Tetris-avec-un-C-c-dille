@@ -23,9 +23,6 @@ Tetromino tetrominos[] = {
     {.x = 3, .y = 0, .shape = {{0, 0, 0, 0}, {0, 1, 1, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}}, .color = {0, 255, 0}} // Green
 };
 
-#define CHAR_WIDTH 16
-#define CHAR_HEIGHT 32
-
 SDL_Texture* fontTexture = NULL;
 
 // Charge l'image ascii.bmp
@@ -44,16 +41,29 @@ SDL_Texture* loadFontTexture(const char* path) {
     return texture;
 }
 
+SDL_Rect getCharSrcRect(unsigned char c) {
+    if (c < 0x20 || c > 0x9F) {
+        SDL_Rect empty = {0, 0, 0, 0};
+        return empty;
+    }
+
+    int index = c - 0x20;
+    int row = index / SPRITESHEET_COLS;
+    int col = index % SPRITESHEET_COLS;
+
+    SDL_Rect rect = {
+        .x = col * CHAR_WIDTH,
+        .y = row * CHAR_HEIGHT,
+        .w = CHAR_WIDTH,
+        .h = CHAR_HEIGHT
+    };
+
+    return rect;
+}
+
 // Affiche un seul caractère à l'écran
 void drawChar(unsigned char c, int x, int y, SDL_Color color) {
-    if (c < 32 || c > 127) return; // ou tu peux afficher un caractère "?"
-    int index = c - 32; // on commence à l'index 0
-    SDL_Rect srcRect = {
-        (index % 16) * CHAR_WIDTH,
-        (index / 16) * CHAR_HEIGHT,
-        CHAR_WIDTH,
-        CHAR_HEIGHT
-    };
+    SDL_Rect srcRect = getCharSrcRect(c);
     SDL_Rect dstRect = { x, y, CHAR_WIDTH, CHAR_HEIGHT };
     SDL_RenderCopy(renderer, fontTexture, &srcRect, &dstRect);
 }
@@ -92,7 +102,7 @@ void drawButton(MenuButton* button) {
 // Main menu loop
 void showMainMenu() {
     MenuButton soloButton = {
-        .rect = {WINDOW_WIDTH / 2 - 100, 200, 200, 50},
+        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - 250, 200, 500, 50},
         .text = "Jouer en solo",
         .baseColor = {70, 130, 180},
         .hoverColor = {100, 149, 237},
@@ -101,11 +111,20 @@ void showMainMenu() {
     };
 
     MenuButton vsBotButton = {
-        .rect = {WINDOW_WIDTH / 2 - 100, 300, 200, 50},
+        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - 250, 300, 500, 50},
         .text = "Jouer contre IA",
         .baseColor = {34, 139, 34},
         .hoverColor = {60, 179, 113},
         .currentColor = {34, 139, 34},
+        .hovered = false
+    };
+
+    MenuButton quitButton = {
+        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - 250, 400, 500, 50},
+        .text = "quitter",
+        .baseColor = {232, 60, 60},
+        .hoverColor = {230, 92, 92},
+        .currentColor = {232, 60, 60},
         .hovered = false
     };
 
@@ -117,17 +136,28 @@ void showMainMenu() {
         SDL_GetMouseState(&mouseX, &mouseY);
         updateButtonHover(&soloButton, mouseX, mouseY);
         updateButtonHover(&vsBotButton, mouseX, mouseY);
+        updateButtonHover(&quitButton, mouseX, mouseY);
 
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
                 return;
             if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
                 if (soloButton.hovered) {
+                    SDL_SetWindowSize(pWindow, SINGLEPLAYER_WINDOW_WIDTH, WINDOW_HEIGHT);
                     singleGame();
                     return;
                 } else if (vsBotButton.hovered) {
                     botGame();
                     return;
+                } else if (quitButton.hovered) {
+                    return;
+                }
+            }
+            if (event.type == SDL_KEYDOWN)
+            {
+                switch (event.key.keysym.sym) {
+                    case SDLK_ESCAPE:
+                        return;
                 }
             }
         }
@@ -137,6 +167,7 @@ void showMainMenu() {
 
         drawButton(&soloButton);
         drawButton(&vsBotButton);
+        drawButton(&quitButton);
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
@@ -333,7 +364,7 @@ void init()
         "Tetris",
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
-        WINDOW_WIDTH,
+        MULTIPLAYER_WINDOW_WIDTH,
         WINDOW_HEIGHT,
         SDL_WINDOW_SHOWN
     );
@@ -376,6 +407,11 @@ void draw(Board * board)
         {
             if (board->gameBoard[y][x].occupied)
             {
+                /* printf("COLOR %d %d %d\n",
+                    board->gameBoard[y][x].color[0],
+                    board->gameBoard[y][x].color[1],
+                    board->gameBoard[y][x].color[2]
+                ); */
                 drawBlock(offsetX + x, offsetY + y, board->gameBoard[y][x].color);
             }
         }
@@ -661,8 +697,8 @@ void placeTetromino(Board * board)
             board->gameBoard[currentTetromino->y + i][currentTetromino->x + j].occupied = 1;
             setCellColor(
                 board,
-                currentTetromino->y + i,
                 currentTetromino->x + j,
+                currentTetromino->y + i,
                 currentTetromino->color[0],
                 currentTetromino->color[1],
                 currentTetromino->color[2]);
