@@ -1,5 +1,5 @@
-#ifndef TETRIC_H
-#define TETRIC_H
+#ifndef TETRIS_H
+#define TETRIS_H
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -50,61 +50,12 @@ typedef struct {
     bool hovered;
 } MenuButton;
 
-Board * playerBoard;
-Board * computerBoard;
+extern Tetromino tetrominos[];
+extern const int tetrominoCount;
+extern SDL_Texture* fontTexture;
+extern Board* playerBoard;
+extern Board* computerBoard;
+extern SDL_Window* pWindow;
+extern SDL_Renderer* renderer;
 
-SDL_Window* pWindow = NULL;
-SDL_Renderer* renderer = NULL;
-
-void init();
-
-void singleGame();
-void botGame();
-
-SDL_Texture* loadFontTexture(const char* path);
-
-SDL_Rect getCharSrcRect(unsigned char c);
-
-void drawChar(unsigned char c, int x, int y, SDL_Color color);
-
-void drawText(const char* text, int x, int y, SDL_Color color);
-void updateButtonHover(MenuButton* button, int mouseX, int mouseY);
-void drawButton(MenuButton* button);
-
-void showMainMenu();
-
-void draw(Board * board);
-
-void drawBlock(int x, int y, int color[]);
-
-bool canMove(Board * board, int dx, int dy);
-
-Tetromino *getRandomTetromino();
-
-Tetromino *rotateTetrominoLeft(Board * board);
-int isPositionValid(Board * board, Tetromino *tetromino);
-
-int checkLegalRotation(Board * board, Tetromino *tetromino);
-void moveTetrominoOutOfBlock(Board * board, Tetromino *tetromino);
-void moveTetrominoInbound(Tetromino *tetromino);
-void moveInboundLeft(Tetromino *tetromino);
-void moveInboundRight(Tetromino *tetromino);
-void moveInboundUp(Tetromino *tetromino);
-
-void placeTetromino(Board * board);
-
-void moveTetromino(Board * board, int dx, int dy);
-
-char checkLineFull(Board * board, int row);
-
-void clearLine(Board * board, int row);
-
-char valueinarray(int val, int *arr, size_t n);
-
-void setCellColor(Board * board, int x, int y, int r, int g, int b);
-
-Board * createBoard(int x, int y);
-
-void freeBoard(Board * board);
-
-#endif // TETRIC_H
+#endif // TETRIS_H

@@ -9,7 +9,14 @@ ENDIF()
 find_package(SDL2 REQUIRED)
 
 add_executable(${PROJECT_NAME} "")
-target_sources(${PROJECT_NAME} PUBLIC tetris.c)
+target_sources(${PROJECT_NAME} PUBLIC
+    tetris.c
+    utils.c
+    font.c
+    ui.c
+    game.c
+    main.c
+)
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
 
