@@ -17,6 +17,9 @@ target_sources(${PROJECT_NAME} PUBLIC
     game.c
     main.c
 )
+
+file(COPY ascii.bmp DESTINATION ${CMAKE_BINARY_DIR})
+
 target_include_directories(${PROJECT_NAME} PUBLIC ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
 
