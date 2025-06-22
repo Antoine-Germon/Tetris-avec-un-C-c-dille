@@ -100,7 +100,7 @@ void drawButton(MenuButton* button) {
 
 void drawBlock(int x, int y, int color[])
 {
-    SDL_Rect outsideBlock = {x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE};
+    SDL_Rect outsideBlock = {x * BLOCK_SIZE + X_OFFSET, y * BLOCK_SIZE + Y_OFFSET, BLOCK_SIZE, BLOCK_SIZE};
 
     int r = color[0];
     int g = color[1];
@@ -112,7 +112,7 @@ void drawBlock(int x, int y, int color[])
 
     double offset = 0.6;
 
-    SDL_Rect insideBlock = {x * BLOCK_SIZE + (BLOCK_SIZE * (1 - offset) / 2), y * BLOCK_SIZE + (BLOCK_SIZE * (1 - offset) / 2), BLOCK_SIZE * offset, BLOCK_SIZE * offset};
+    SDL_Rect insideBlock = {x * BLOCK_SIZE+ X_OFFSET + (BLOCK_SIZE * (1 - offset) / 2), y * BLOCK_SIZE + Y_OFFSET + (BLOCK_SIZE * (1 - offset) / 2), BLOCK_SIZE * offset, BLOCK_SIZE * offset};
 
     SDL_SetRenderDrawColor(renderer, r, g, b, 255);
 
@@ -125,10 +125,10 @@ void drawGrid() {
     for (int x = 0; x <= BOARD_WIDTH; x++) {
         SDL_RenderDrawLine(
             renderer,
-            x * BLOCK_SIZE,         // x début
-            0,                      // y début
-            x * BLOCK_SIZE,         // x fin
-            BOARD_HEIGHT * BLOCK_SIZE  // y fin
+            x * BLOCK_SIZE + X_OFFSET,         // x début
+            Y_OFFSET,                      // y début
+            x * BLOCK_SIZE + X_OFFSET,         // x fin
+            BOARD_HEIGHT * BLOCK_SIZE + Y_OFFSET  // y fin
         );
     }
 
@@ -136,17 +136,17 @@ void drawGrid() {
     for (int y = 0; y <= BOARD_HEIGHT; y++) {
         SDL_RenderDrawLine(
             renderer,
-            0,                      // x début
-            y * BLOCK_SIZE,         // y début
-            BOARD_WIDTH * BLOCK_SIZE, // x fin
-            y * BLOCK_SIZE          // y fin
+             X_OFFSET,                      // x début
+            y * BLOCK_SIZE + Y_OFFSET,         // y début
+            BOARD_WIDTH * BLOCK_SIZE + X_OFFSET, // x fin
+            y * BLOCK_SIZE + Y_OFFSET          // y fin
         );
     }
 }
 void drawBoardBorder() {
     SDL_Rect borderRect = {
-        0,  // x
-        0,  // y
+        X_OFFSET,  // x
+        Y_OFFSET,  // y
         BOARD_WIDTH * BLOCK_SIZE,  // largeur totale du plateau
         BOARD_HEIGHT * BLOCK_SIZE  // hauteur totale du plateau
     };
