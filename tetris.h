@@ -38,6 +38,7 @@ typedef struct {
 typedef struct {
     int x, y;
     Tetromino* currentTetromino;
+    Tetromino* nextTetromino;
     Cell ** gameBoard;
 } Board;
 
