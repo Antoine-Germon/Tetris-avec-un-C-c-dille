@@ -33,16 +33,11 @@ void singleGame() {
                 case SDLK_r:
                 {
                     Tetromino *rotated = rotateTetrominoLeft(playerBoard);
-                    if (rotated != playerBoard->currentTetromino)
-                    {
-                        free(playerBoard->currentTetromino);
-                        playerBoard->currentTetromino = rotated;
-                    }
-                    else
-                    {
-                        free(rotated); // Important si tu fais un malloc() inutilement dans tous les cas
-                    }
-                    break;
+    if (rotated != NULL) {
+        free(playerBoard->currentTetromino);
+        playerBoard->currentTetromino = rotated;
+    }
+    break;
                 }
                 case SDLK_ESCAPE:
                     quit = true;
@@ -112,17 +107,12 @@ void botGame() {
                     break;
                 case SDLK_r:
                 {
-                    Tetromino *rotated = rotateTetrominoLeft(playerBoard);
-                    if (rotated != playerBoard->currentTetromino)
-                    {
-                        free(playerBoard->currentTetromino);
-                        playerBoard->currentTetromino = rotated;
-                    }
-                    else
-                    {
-                        free(rotated); // Important si tu fais un malloc() inutilement dans tous les cas
-                    }
-                    break;
+                   Tetromino *rotated = rotateTetrominoLeft(playerBoard);
+    if (rotated != NULL) {
+        free(playerBoard->currentTetromino);
+        playerBoard->currentTetromino = rotated;
+    }
+    break;
                 }
                 case SDLK_ESCAPE:
                     quit = true;
@@ -190,125 +180,62 @@ Tetromino* rotateTetrominoLeft(Board * board) {
             tempTetromino->shape[i][j] = board->currentTetromino->shape[j][TETROMINO_SHAPE_BOX_SIZE - i - 1];
         }
     }
-    moveTetrominoOutOfBlock(board, tempTetromino);
-    moveTetrominoInbound(tempTetromino);
-    int canRotate = checkLegalRotation(board, tempTetromino);
-    if (canRotate == 1)
-    {
-        return tempTetromino;
+    if (isValidPosition(board, tempTetromino)) {
+        return tempTetromino;  // Rotation is valid, return rotated tetromino
     }
-    else
-    {
-        return board->currentTetromino;
+
+    // Rotation failed, try wall kicks (translation)
+    const int kickTests[][2] = {
+        {-1, 0}, {1, 0}, {0, 1},{0, -1},{-2, 0}, {2, 0},{0, -2}
+    };
+
+    for (int i = 0; i < 3; i++) {
+        int dx = kickTests[i][0];
+        int dy = kickTests[i][1];
+        tempTetromino->x += dx;
+        tempTetromino->y += dy;
+        if (isValidPosition(board, tempTetromino)) {
+            return tempTetromino;
+        }
+        tempTetromino->x -= dx; // Revenir si pas bon
+        tempTetromino->y -= dy;
     }
+    // If all moves fail, return the original tetromino
+    free(tempTetromino);
+    return NULL;
+ 
 }
 
-int checkLegalRotation(Board * board, Tetromino *tetromino)
-{
-    int posX = tetromino->x;
-    int posY = tetromino->y;
-    for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
-    {
-        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
-        {
-            if (posY + j < BOARD_HEIGHT && posX + i < BOARD_WIDTH)
-            {
+int tryMoveTetromino(Board *board, Tetromino *tetromino, int dx, int dy) {
+    Tetromino tempTetromino = *tetromino;
+    tempTetromino.x += dx;
+    tempTetromino.y += dy;
 
-                if (board->gameBoard[posY + j][posX + i].occupied == 1 && tetromino->shape[j][i] == 1)
-                {
+    return isValidPosition(board, &tempTetromino);
+}
+
+int isValidPosition(Board *board, Tetromino *tetromino) {
+    for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++) {
+        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++) {
+            if (tetromino->shape[i][j]) {
+                int x = tetromino->x + j;
+                int y = tetromino->y + i;
+
+                // Check bounds
+                if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
+                    printf("out of bounds\n");
+                    return 0;
+                }
+
+                // Check collision with existing blocks
+                if (board->gameBoard[y][x].occupied) {
+                    printf("collision\n");
                     return 0;
                 }
             }
         }
     }
     return 1;
-}
-void moveTetrominoOutOfBlock(Board * board, Tetromino *tetromino)
-{
-    int posX = tetromino->x;
-    int posY = tetromino->y;
-    for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
-    {
-        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
-        {
-            if (posY + j < BOARD_HEIGHT && posX + i < BOARD_WIDTH)
-            {
-                if (board->gameBoard[posY + j][posX + i].occupied == 1 && tetromino->shape[j][i] == 1)
-                {
-                    if (i < 2)
-                    {
-                        tetromino->x = i;
-                        return;
-                    }
-                    else
-                    {
-                        tetromino->x -= i;
-                        return;
-                    }
-                }
-            }
-        }
-    }
-}
-
-void moveTetrominoInbound(Tetromino *tetromino)
-{
-    if (tetromino->x < 0)
-    {
-        moveInboundLeft(tetromino);
-    }
-    else if (tetromino->x + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_WIDTH)
-    {
-        moveInboundRight(tetromino);
-    }
-    if (tetromino->y + TETROMINO_SHAPE_BOX_SIZE - 1 >= BOARD_HEIGHT)
-    {
-        moveInboundUp(tetromino);
-    }
-}
-
-void moveInboundLeft(Tetromino *tetromino)
-{
-    for (int i = 0; i + tetromino->x < 0; i++)
-    {
-        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
-        {
-            if (tetromino->shape[j][i] == 1)
-            {
-                tetromino->x = i;
-                return;
-            }
-        }
-    }
-}
-
-void moveInboundRight(Tetromino *tetromino)
-{
-    for (int i = TETROMINO_SHAPE_BOX_SIZE - 1; i + tetromino->x >= BOARD_WIDTH; i--)
-    {
-        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++)
-        {
-            if (tetromino->shape[j][i] == 1)
-            {
-                tetromino->x = BOARD_WIDTH - i - 1;
-                return;
-            }
-        }
-    }
-}
-void moveInboundUp(Tetromino *tetromino)
-{
-    for (int j = TETROMINO_SHAPE_BOX_SIZE - 1; j + tetromino->y >= BOARD_HEIGHT; j--)
-    {
-        for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++)
-        {
-            if (tetromino->shape[j][i] == 1)
-            {
-                tetromino->y = BOARD_HEIGHT - j - 1;
-                return;
-            }
-        }
-    }
 }
 
 void placeTetromino(Board * board)
