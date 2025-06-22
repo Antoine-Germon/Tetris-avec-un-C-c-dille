@@ -1,5 +1,5 @@
 #include "game.h"
-
+int panel_offset_x = X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20;
 void showMainMenu() {
     MenuButton soloButton = {
         .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - 250, 200, 500, 50},
@@ -154,4 +154,39 @@ void drawBoardBorder() {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Blanc, par exemple
 
     SDL_RenderDrawRect(renderer, &borderRect); // Dessine un rectangle vide
+}
+
+void drawScore(int score) {
+    char buffer[32];
+    sprintf(buffer, "Score: %d", score);
+
+    SDL_Color white = {255, 255, 255};
+    //SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    drawText(buffer,panel_offset_x,Y_OFFSET,white);
+    //SDL_Rect dstRect = {panel_offset_x, Y_OFFSET, textSurface->w, textSurface->h};
+    //SDL_RenderCopy(renderer, textTexture, NULL, &dstRect);
+
+    //SDL_DestroyTexture(textTexture);
+}
+
+void drawNextTetromino(Tetromino* next) {
+    int previewBlockSize = BLOCK_SIZE / 2;
+    int previewOffsetX = panel_offset_x;
+    int previewOffsetY = Y_OFFSET + 50;
+
+    for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++) {
+        for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++) {
+            if (next->shape[i][j]) {
+                SDL_Rect rect = {
+                    previewOffsetX + j * previewBlockSize,
+                    previewOffsetY + i * previewBlockSize,
+                    previewBlockSize,
+                    previewBlockSize
+                };
+
+                SDL_SetRenderDrawColor(renderer, next->color[0], next->color[1], next->color[2], 255);
+                SDL_RenderFillRect(renderer, &rect);
+            }
+        }
+    }
 }

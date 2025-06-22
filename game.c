@@ -65,6 +65,8 @@ void singleGame() {
         drawGrid();
         draw(playerBoard);
         drawBoardBorder();
+        drawScore(50);
+        drawNextTetromino(playerBoard->currentTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);

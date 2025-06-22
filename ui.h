@@ -11,4 +11,6 @@ void drawButton(MenuButton* button);
 void drawBlock(int x, int y, int color[]);
 void drawGrid();
 void drawBoardBorder();
+void drawScore(int score);
+void drawNextTetromino(Tetromino* next);
 #endif // UI_H
