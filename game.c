@@ -62,9 +62,9 @@ void singleGame() {
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);    
-
+        drawGrid();
         draw(playerBoard);
-
+        drawBoardBorder();
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -431,11 +431,6 @@ void draw(Board * board)
         {
             if (board->gameBoard[y][x].occupied)
             {
-                /* printf("COLOR %d %d %d\n",
-                    board->gameBoard[y][x].color[0],
-                    board->gameBoard[y][x].color[1],
-                    board->gameBoard[y][x].color[2]
-                ); */
                 drawBlock(offsetX + x, offsetY + y, board->gameBoard[y][x].color);
             }
         }

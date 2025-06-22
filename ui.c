@@ -118,3 +118,40 @@ void drawBlock(int x, int y, int color[])
 
     SDL_RenderFillRect(renderer, &insideBlock);
 }
+void drawGrid() {
+    SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255); // Couleur gris foncé pour la grille
+
+    // Lignes verticales
+    for (int x = 0; x <= BOARD_WIDTH; x++) {
+        SDL_RenderDrawLine(
+            renderer,
+            x * BLOCK_SIZE,         // x début
+            0,                      // y début
+            x * BLOCK_SIZE,         // x fin
+            BOARD_HEIGHT * BLOCK_SIZE  // y fin
+        );
+    }
+
+    // Lignes horizontales
+    for (int y = 0; y <= BOARD_HEIGHT; y++) {
+        SDL_RenderDrawLine(
+            renderer,
+            0,                      // x début
+            y * BLOCK_SIZE,         // y début
+            BOARD_WIDTH * BLOCK_SIZE, // x fin
+            y * BLOCK_SIZE          // y fin
+        );
+    }
+}
+void drawBoardBorder() {
+    SDL_Rect borderRect = {
+        0,  // x
+        0,  // y
+        BOARD_WIDTH * BLOCK_SIZE,  // largeur totale du plateau
+        BOARD_HEIGHT * BLOCK_SIZE  // hauteur totale du plateau
+    };
+
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Blanc, par exemple
+
+    SDL_RenderDrawRect(renderer, &borderRect); // Dessine un rectangle vide
+}

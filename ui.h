@@ -8,5 +8,6 @@ void showMainMenu();
 void updateButtonHover(MenuButton* button, int mouseX, int mouseY);
 void drawButton(MenuButton* button);
 void drawBlock(int x, int y, int color[]);
-
+void drawGrid();
+void drawBoardBorder();
 #endif // UI_H
