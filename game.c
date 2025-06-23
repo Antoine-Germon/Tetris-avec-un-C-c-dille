@@ -80,11 +80,18 @@ void singleGame() {
 }
 
 void botGame() {
-    playerBoard = createBoard(0, 0);
-    computerBoard = createBoard(20, 0);
+    playerBoard = createBoard(0, 1);
+    computerBoard = createBoard(19, 1);
     
     playerBoard->currentTetromino = getRandomTetromino();
     computerBoard->currentTetromino = getRandomTetromino();
+    refillBag(playerBoard);
+    refillBag(computerBoard);
+
+    playerBoard->currentTetromino = getNextTetromino(playerBoard);
+    playerBoard->nextTetromino = getNextTetromino(playerBoard);
+    computerBoard->currentTetromino = getNextTetromino(computerBoard);
+    computerBoard->nextTetromino = getNextTetromino(computerBoard);
     
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
