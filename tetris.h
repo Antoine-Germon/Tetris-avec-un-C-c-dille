@@ -22,6 +22,8 @@
 
 #define SPRITESHEET_COLS 16
 #define SPRITESHEET_ROWS 8
+#define BAG_SIZE 7
+
 
 typedef struct
 {
@@ -40,6 +42,8 @@ typedef struct {
     Tetromino* currentTetromino;
     Tetromino* nextTetromino;
     Cell ** gameBoard;
+    int tetrominoBag[BAG_SIZE];
+    int bagIndex;
 } Board;
 
 typedef struct {
@@ -59,4 +63,6 @@ extern Board* computerBoard;
 extern SDL_Window* pWindow;
 extern SDL_Renderer* renderer;
 
+void refillBag(Board* board);
+Tetromino* getNextTetromino(Board* board);
 #endif // TETRIS_H

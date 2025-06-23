@@ -2,9 +2,10 @@
 
 void singleGame() {
     playerBoard = createBoard(0, 1);
-    
-    playerBoard->currentTetromino = getRandomTetromino();
-    
+        
+    refillBag(playerBoard);
+    playerBoard->currentTetromino = getNextTetromino(playerBoard);
+    playerBoard->nextTetromino = getNextTetromino(playerBoard);
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
 
@@ -68,7 +69,7 @@ void singleGame() {
         /* drawScore(50);
         drawNextTetromino(playerBoard->currentTetromino); */
 
-        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, 50, playerBoard->currentTetromino);
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, 50, playerBoard->nextTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -85,9 +86,13 @@ void singleGame() {
 void botGame() {
     playerBoard = createBoard(0, 1);
     computerBoard = createBoard(19, 1);
-    
-    playerBoard->currentTetromino = getRandomTetromino();
-    computerBoard->currentTetromino = getRandomTetromino();
+    refillBag(playerBoard);
+    refillBag(computerBoard);
+
+    playerBoard->currentTetromino = getNextTetromino(playerBoard);
+    playerBoard->nextTetromino = getNextTetromino(playerBoard);
+    computerBoard->currentTetromino = getNextTetromino(computerBoard);
+    computerBoard->nextTetromino = getNextTetromino(computerBoard);
     
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
@@ -172,20 +177,6 @@ void botGame() {
     freeBoard(computerBoard);
 }
 
-Tetromino *getRandomTetromino()
-{
-    int index = rand() % tetrominoCount;
-    Tetromino *copy = malloc(sizeof(Tetromino));
-    if (!copy)
-    {
-        printf("Failed to allocate memory for Tetromino copy\n");
-        exit(EXIT_FAILURE);
-    }
-
-    *copy = tetrominos[index]; // Copie complète (shallow copy)
-
-    return copy;
-}
 
 Tetromino* rotateTetrominoLeft(Board * board) {
     Tetromino* tempTetromino = malloc(sizeof(Tetromino));
@@ -296,8 +287,9 @@ void placeTetromino(Board * board)
         char lineFull = checkLineFull(board, row);
         if (lineFull) clearLine(board, row);
     }
-
-    board->currentTetromino = getRandomTetromino();
+    free(board->currentTetromino);
+    board->currentTetromino = board->nextTetromino;
+    board->nextTetromino = getNextTetromino(board);
     board->currentTetromino->x = 3;
     board->currentTetromino->y = 0;
 }
