@@ -1,7 +1,7 @@
 #include "game.h"
 
 void singleGame() {
-    playerBoard = createBoard(0, 0);
+    playerBoard = createBoard(0, 1);
     
     playerBoard->currentTetromino = getRandomTetromino();
     
@@ -29,15 +29,16 @@ void singleGame() {
                     break;
                 case SDLK_DOWN:
                     moveTetromino(playerBoard, 0, 1);
+                    lastFallTime = SDL_GetTicks();
                     break;
                 case SDLK_r:
                 {
                     Tetromino *rotated = rotateTetrominoLeft(playerBoard);
-    if (rotated != NULL) {
-        free(playerBoard->currentTetromino);
-        playerBoard->currentTetromino = rotated;
-    }
-    break;
+                    if (rotated != NULL) {
+                        free(playerBoard->currentTetromino);
+                        playerBoard->currentTetromino = rotated;
+                    }
+                    break;
                 }
                 case SDLK_ESCAPE:
                     quit = true;
@@ -57,11 +58,11 @@ void singleGame() {
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);    
-        drawGrid();
         draw(playerBoard);
-        drawBoardBorder();
-        drawScore(50);
-        drawNextTetromino(playerBoard->currentTetromino);
+        /* drawScore(50);
+        drawNextTetromino(playerBoard->currentTetromino); */
+
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, 50, playerBoard->currentTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -76,8 +77,8 @@ void singleGame() {
 }
 
 void botGame() {
-    playerBoard = createBoard(0, 0);
-    computerBoard = createBoard(20, 0);
+    playerBoard = createBoard(0, 1);
+    computerBoard = createBoard(19, 1);
     
     playerBoard->currentTetromino = getRandomTetromino();
     computerBoard->currentTetromino = getRandomTetromino();
@@ -110,11 +111,11 @@ void botGame() {
                 case SDLK_r:
                 {
                    Tetromino *rotated = rotateTetrominoLeft(playerBoard);
-    if (rotated != NULL) {
-        free(playerBoard->currentTetromino);
-        playerBoard->currentTetromino = rotated;
-    }
-    break;
+                    if (rotated != NULL) {
+                        free(playerBoard->currentTetromino);
+                        playerBoard->currentTetromino = rotated;
+                    }
+                    break;
                 }
                 case SDLK_ESCAPE:
                     quit = true;
@@ -139,6 +140,7 @@ void botGame() {
         draw(playerBoard);
         draw(computerBoard);
 
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, 50, playerBoard->currentTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -376,16 +378,12 @@ void draw(Board * board)
             if (currentTetromino->shape[i][j])
             {
                 drawBlock(currentTetromino->x + j + offsetX, currentTetromino->y + i + offsetY, currentTetromino->color);
-                /* SDL_Rect block = {
-                    (currentTetromino->x + j) * BLOCK_SIZE,
-                    (currentTetromino->y + i) * BLOCK_SIZE,
-                    BLOCK_SIZE,
-                    BLOCK_SIZE
-                };
-                SDL_RenderFillRect(renderer, &block); */
             }
         }
     }
+
+    drawGrid(board);
+    drawBoardBorder(board);
 }
 
 char checkLineFull(Board * board, int row)

@@ -49,3 +49,11 @@ void drawText(const char* text, int x, int y, SDL_Color color) {
         drawChar(text[i], x + i * CHAR_WIDTH, y, color);
     }
 }
+
+void drawTextSpaced(const char* text, int x, int y, SDL_Color color, int charWidth, int charHeight, int spacing) {
+    for (int i = 0; text[i] != '\0'; i++) {
+        SDL_Rect srcRect = getCharSrcRect(text[i]);
+        SDL_Rect dstRect = { x + i * (charWidth + spacing), y, charWidth, charHeight };
+        SDL_RenderCopy(renderer, fontTexture, &srcRect, &dstRect);
+    }
+}

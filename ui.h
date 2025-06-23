@@ -9,8 +9,9 @@ void showMainMenu();
 void updateButtonHover(MenuButton* button, int mouseX, int mouseY);
 void drawButton(MenuButton* button);
 void drawBlock(int x, int y, int color[]);
-void drawGrid();
-void drawBoardBorder();
-void drawScore(int score);
-void drawNextTetromino(Tetromino* next);
+void drawGrid(Board* board);
+void drawBoardBorder(Board* board);
+void drawScore(int x, int y, int score);
+void drawNextTetromino(int x, int y, Tetromino* next);
+void drawPlayerMenu(int x, int y, int score, Tetromino* next);
 #endif // UI_H
