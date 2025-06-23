@@ -2,9 +2,9 @@
 
 void singleGame() {
     playerBoard = createBoard(0, 0);
-    refillBag();
-    playerBoard->currentTetromino = getNextTetromino();
-    playerBoard->nextTetromino = getNextTetromino();
+    refillBag(playerBoard);
+    playerBoard->currentTetromino = getNextTetromino(playerBoard);
+    playerBoard->nextTetromino = getNextTetromino(playerBoard);
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
 
@@ -78,11 +78,13 @@ void singleGame() {
 void botGame() {
     playerBoard = createBoard(0, 0);
     computerBoard = createBoard(20, 0);
-    refillBag();
-     playerBoard->currentTetromino = getNextTetromino();
-    playerBoard->nextTetromino = getNextTetromino();
-     computerBoard->currentTetromino = getNextTetromino();
-    computerBoard->nextTetromino = getNextTetromino();
+    refillBag(playerBoard);
+    refillBag(computerBoard);
+
+    playerBoard->currentTetromino = getNextTetromino(playerBoard);
+    playerBoard->nextTetromino = getNextTetromino(playerBoard);
+    computerBoard->currentTetromino = getNextTetromino(computerBoard);
+    computerBoard->nextTetromino = getNextTetromino(computerBoard);
     
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
@@ -266,8 +268,8 @@ void placeTetromino(Board * board)
         if (lineFull) clearLine(board, row);
     }
     free(board->currentTetromino);
-    playerBoard->currentTetromino = playerBoard->nextTetromino;
-    playerBoard->nextTetromino = getNextTetromino();
+    board->currentTetromino = board->nextTetromino;
+    board->nextTetromino = getNextTetromino(board);
     board->currentTetromino->x = 3;
     board->currentTetromino->y = 0;
 }

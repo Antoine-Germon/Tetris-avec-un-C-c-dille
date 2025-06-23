@@ -42,6 +42,8 @@ typedef struct {
     Tetromino* currentTetromino;
     Tetromino* nextTetromino;
     Cell ** gameBoard;
+    int tetrominoBag[BAG_SIZE];
+    int bagIndex;
 } Board;
 
 typedef struct {
@@ -60,8 +62,7 @@ extern Board* playerBoard;
 extern Board* computerBoard;
 extern SDL_Window* pWindow;
 extern SDL_Renderer* renderer;
-extern int tetrominoBag[];
-extern int bagIndex;
-void refillBag();
-Tetromino* getNextTetromino();
+
+void refillBag(Board* board);
+Tetromino* getNextTetromino(Board* board);
 #endif // TETRIS_H
