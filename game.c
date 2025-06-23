@@ -2,9 +2,9 @@
 
 void singleGame() {
     playerBoard = createBoard(0, 0);
-    
-    playerBoard->currentTetromino = getRandomTetromino();
-    
+    refillBag();
+    playerBoard->currentTetromino = getNextTetromino();
+    playerBoard->nextTetromino = getNextTetromino();
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
 
@@ -61,7 +61,7 @@ void singleGame() {
         draw(playerBoard);
         drawBoardBorder();
         drawScore(50);
-        drawNextTetromino(playerBoard->currentTetromino);
+        drawNextTetromino(playerBoard->nextTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -78,9 +78,11 @@ void singleGame() {
 void botGame() {
     playerBoard = createBoard(0, 0);
     computerBoard = createBoard(20, 0);
-    
-    playerBoard->currentTetromino = getRandomTetromino();
-    computerBoard->currentTetromino = getRandomTetromino();
+    refillBag();
+     playerBoard->currentTetromino = getNextTetromino();
+    playerBoard->nextTetromino = getNextTetromino();
+     computerBoard->currentTetromino = getNextTetromino();
+    computerBoard->nextTetromino = getNextTetromino();
     
     bool quit = false;
     Uint32 lastFallTime = SDL_GetTicks();
@@ -153,20 +155,6 @@ void botGame() {
     freeBoard(computerBoard);
 }
 
-Tetromino *getRandomTetromino()
-{
-    int index = rand() % tetrominoCount;
-    Tetromino *copy = malloc(sizeof(Tetromino));
-    if (!copy)
-    {
-        printf("Failed to allocate memory for Tetromino copy\n");
-        exit(EXIT_FAILURE);
-    }
-
-    *copy = tetrominos[index]; // Copie complète (shallow copy)
-
-    return copy;
-}
 
 Tetromino* rotateTetrominoLeft(Board * board) {
     Tetromino* tempTetromino = malloc(sizeof(Tetromino));
@@ -277,8 +265,9 @@ void placeTetromino(Board * board)
         char lineFull = checkLineFull(board, row);
         if (lineFull) clearLine(board, row);
     }
-
-    board->currentTetromino = getRandomTetromino();
+    free(board->currentTetromino);
+    playerBoard->currentTetromino = playerBoard->nextTetromino;
+    playerBoard->nextTetromino = getNextTetromino();
     board->currentTetromino->x = 3;
     board->currentTetromino->y = 0;
 }

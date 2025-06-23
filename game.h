@@ -9,8 +9,6 @@ void singleGame();
 void botGame();
 
 // Fonctions liées aux Tetrominos
-Tetromino *getRandomTetromino();
-
 Tetromino *rotateTetrominoLeft(Board * board);
 
 int isPositionValid(Board * board, Tetromino *tetromino);
