@@ -83,6 +83,117 @@ void singleGame() {
     freeBoard(playerBoard);
 }
 
+Cell** copyGameBoard(Cell** original) {
+    Cell** copy = malloc(BOARD_HEIGHT * sizeof(Cell*));
+    for (int i = 0; i < BOARD_HEIGHT; i++) {
+        copy[i] = malloc(BOARD_WIDTH * sizeof(Cell));
+        for (int j = 0; j < BOARD_WIDTH; j++) {
+            copy[i][j] = original[i][j];  // copy cell including color
+        }
+    }
+    return copy;
+}
+
+void freeGameBoard(Cell** board) {
+    for (int i = 0; i < BOARD_HEIGHT; i++) {
+        free(board[i]);
+    }
+    free(board);
+}
+
+int evaluateGameBoard(Cell** gameBoard) {
+    int aggregateHeight = 0;
+    int holes = 0;
+    int bumpiness = 0;
+    int completedLines = 0;
+
+    int heights[BOARD_WIDTH] = {0};
+
+    // Check des lignes complètes
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        int full = 1;
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if (!gameBoard[y][x].occupied) {
+                full = 0;
+                break;
+            }
+        }
+        if (full) completedLines++;
+    }
+
+    return 40 * completedLines;   // Bonus pour chaque ligne complétée
+}
+
+// 0=left, 1=right, 2=down, 3=rotate
+int getBestMove(Board *board) {
+    int bestScore = 1 << 30; // on définit un high score
+    int bestX = board->currentTetromino->x;
+    int bestRotation = 0;
+
+    for (int rot = 0; rot < 4; rot++) {
+        Tetromino* testTetromino = malloc(sizeof(Tetromino));
+        memcpy(testTetromino, board->currentTetromino, sizeof(Tetromino));
+
+        for (int r = 0; r < rot; r++) {
+            Tetromino* rotated = rotateTetrominoLeft(board);
+            if (rotated) {
+                free(testTetromino);
+                testTetromino = rotated;
+            }
+        }
+
+        for (int x = -2; x < BOARD_WIDTH; x++) {
+            Tetromino testPiece = *testTetromino;
+            testPiece.x = x;
+            testPiece.y = 0;
+
+            if (!isValidPosition(board, &testPiece)) continue;
+
+            // On drop la pièce tout en bas du plateau
+            while (isValidPosition(board, &testPiece)) {
+                testPiece.y += 1;
+            }
+            testPiece.y -= 1;
+
+            // On crée une copie du gameboard
+            Cell** testBoard = copyGameBoard(board->gameBoard);
+
+            for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++) {
+                for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++) {
+                    if (testPiece.shape[i][j]) {
+                        int bx = testPiece.x + j;
+                        int by = testPiece.y + i;
+                        if (bx >= 0 && bx < BOARD_WIDTH && by >= 0 && by < BOARD_HEIGHT) {
+                            testBoard[by][bx].occupied = 1;
+                        }
+                    }
+                }
+            }
+
+            int score = evaluateGameBoard(testBoard);
+            if (score < bestScore) {
+                bestScore = score;
+                bestX = x;
+                bestRotation = rot;
+            }
+
+            freeGameBoard(testBoard);
+        }
+        free(testTetromino);
+    }
+
+    // Decide next move to reach bestX and bestRotation
+    int curX = board->currentTetromino->x;
+    if (bestRotation > 0)
+        return 3;  // rotate
+    else if (curX < bestX)
+        return 1;  // move right
+    else if (curX > bestX)
+        return 0;  // move left
+    else
+        return 2;  // drop
+}
+
 void botGame() {
     playerBoard = createBoard(0, 1);
     computerBoard = createBoard(19, 1);
@@ -147,6 +258,31 @@ void botGame() {
             break;
         }
 
+        if (SDL_GetTicks() - lastFallTime > 20) {
+            int move = getBestMove(computerBoard);
+
+            switch (move) {
+                case 0:
+                    moveTetromino(computerBoard, -1, 0);
+                    break;
+                case 1:
+                    moveTetromino(computerBoard, 1, 0);
+                    break;
+                case 2:
+                    moveTetromino(computerBoard, 0, 1);
+                    break;
+                case 3:
+                {
+                   Tetromino *rotated = rotateTetrominoLeft(computerBoard);
+                    if (rotated != NULL) {
+                        free(computerBoard->currentTetromino);
+                        computerBoard->currentTetromino = rotated;
+                    }
+                    break;
+                }
+            }
+        }
+
         // Move tetromino down every 500ms
         if (SDL_GetTicks() - lastFallTime > 500)
         {
@@ -162,7 +298,7 @@ void botGame() {
         draw(playerBoard);
         draw(computerBoard);
 
-        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, 50, playerBoard->currentTetromino);
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, 50, playerBoard->nextTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);

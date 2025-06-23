@@ -11,15 +11,21 @@ void botGame();
 // Fonctions liées aux Tetrominos
 Tetromino *rotateTetrominoLeft(Board * board);
 
-int isPositionValid(Board * board, Tetromino *tetromino);
-
 int tryMoveTetromino(Board *board, Tetromino *tetromino, int dx, int dy);
 
 void placeTetromino(Board * board);
 
 void moveTetromino(Board * board, int dx, int dy);
 int isValidPosition(Board *board, Tetromino *tetromino);
-// Fonctions liées au plateaux
+
+int evaluateGameBoard(Cell** gameBoard);
+int getBestMove(Board *board);
+
+Cell** copyGameBoard(Cell** original);
+
+void freeGameBoard(Cell** board);
+
+// Fonctions liées au plateau
 Board * createBoard(int x, int y);
 void freeBoard(Board * board);
 void draw(Board * board);
