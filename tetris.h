@@ -23,7 +23,7 @@
 #define SPRITESHEET_COLS 16
 #define SPRITESHEET_ROWS 8
 #define BAG_SIZE 7
-
+#define BASE_SCORE 10
 
 typedef struct
 {
@@ -44,6 +44,7 @@ typedef struct {
     Cell ** gameBoard;
     int tetrominoBag[BAG_SIZE];
     int bagIndex;
+    int score;
 } Board;
 
 typedef struct {
