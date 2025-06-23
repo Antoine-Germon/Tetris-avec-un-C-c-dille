@@ -2,9 +2,7 @@
 
 void singleGame() {
     playerBoard = createBoard(0, 1);
-    
-    playerBoard->currentTetromino = getRandomTetromino();
-    
+        
     refillBag(playerBoard);
     playerBoard->currentTetromino = getNextTetromino(playerBoard);
     playerBoard->nextTetromino = getNextTetromino(playerBoard);
@@ -82,9 +80,6 @@ void singleGame() {
 void botGame() {
     playerBoard = createBoard(0, 1);
     computerBoard = createBoard(19, 1);
-    
-    playerBoard->currentTetromino = getRandomTetromino();
-    computerBoard->currentTetromino = getRandomTetromino();
     refillBag(playerBoard);
     refillBag(computerBoard);
 
