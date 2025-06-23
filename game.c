@@ -377,7 +377,6 @@ void draw(Board * board)
         {
             if (currentTetromino->shape[i][j])
             {
-                printf("%d, %d\n", currentTetromino->x + j + offsetX, currentTetromino->y + i + offsetY);
                 drawBlock(currentTetromino->x + j + offsetX, currentTetromino->y + i + offsetY, currentTetromino->color);
                 /* SDL_Rect block = {
                     (currentTetromino->x + j) * BLOCK_SIZE,
