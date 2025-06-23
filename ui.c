@@ -24,7 +24,7 @@ void showMainMenu() {
 
     MenuButton quitButton = {
         .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - (buttonWidth / 2), 400, buttonWidth, buttonHeight},
-        .text = "quitter",
+        .text = "Quitter",
         .baseColor = {232, 60, 60},
         .hoverColor = {230, 92, 92},
         .currentColor = {232, 60, 60},
@@ -53,6 +53,7 @@ void showMainMenu() {
                     botGame();
                     return;
                 } else if (quitButton.hovered) {
+                    exit(0);
                     return;
                 }
             }
@@ -223,5 +224,79 @@ void drawNextTetromino(int x, int y, Tetromino* next) {
                 SDL_RenderFillRect(renderer, &rect);
             }
         }
+    }
+}
+
+void showGameOverScreen(const char* text, RestartCallback restartFunction, int width) {
+    int buttonWidth = 300;
+    int buttonHeight = 50;
+
+    MenuButton replayButton = {
+        .rect = {width / 2 - buttonWidth / 2, 300, buttonWidth, buttonHeight},
+        .text = "Rejouer",
+        .baseColor = {70, 130, 180},
+        .hoverColor = {100, 149, 237},
+        .currentColor = {70, 130, 180},
+        .hovered = false
+    };
+    MenuButton menuButton = {
+        .rect = {width / 2 - buttonWidth / 2, 400, buttonWidth, buttonHeight},
+        .text = "Menu",
+        .baseColor = {34, 139, 34},
+        .hoverColor = {60, 179, 113},
+        .currentColor = {34, 139, 34},
+        .hovered = false
+    };
+    MenuButton quitButton = {
+        .rect = {width / 2 - buttonWidth / 2, 500, buttonWidth, buttonHeight},
+        .text = "Quitter",
+        .baseColor = {232, 60, 60},
+        .hoverColor = {230, 92, 92},
+        .currentColor = {232, 60, 60},
+        .hovered = false
+    };
+
+    bool running = true;
+    SDL_Event event;
+    int mouseX, mouseY;
+
+    while (running) {
+        SDL_GetMouseState(&mouseX, &mouseY);
+        updateButtonHover(&replayButton, mouseX, mouseY);
+        updateButtonHover(&menuButton, mouseX, mouseY);
+        updateButtonHover(&quitButton, mouseX, mouseY);
+
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                exit(0);
+            if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                if (replayButton.hovered) {
+                    restartFunction(); 
+                    return;
+                } else if (quitButton.hovered) {
+                    exit(0);
+                }
+                else if (menuButton.hovered) {
+                    showMainMenu();
+                }
+            }
+            if (event.type == SDL_KEYDOWN) {
+                if (event.key.keysym.sym == SDLK_ESCAPE)
+                    exit(0);
+            }
+        }
+
+        SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
+        SDL_RenderClear(renderer);
+
+        // Texte "Game Over"
+        drawTextSpaced(text, width / 2 - 150, 150, (SDL_Color){255, 0, 0}, 30, 30, 2);
+
+        drawButton(&replayButton);
+        drawButton(&quitButton);
+        drawButton(&menuButton);
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16);
     }
 }

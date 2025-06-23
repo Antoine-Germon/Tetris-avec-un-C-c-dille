@@ -51,7 +51,7 @@ void singleGame() {
         }
 
         if (hasLost(playerBoard)) {
-            printf("You lost.............\n");
+            showGameOverScreen("GAME OVER", singleGame, SINGLEPLAYER_WINDOW_WIDTH);
             break;
         }
 
@@ -138,12 +138,12 @@ void botGame() {
         }
 
         if (hasLost(playerBoard)) {
-            printf("Computer wins!!!!!!!!!!!!\n");
+            showGameOverScreen("YOU LOSE", botGame, MULTIPLAYER_WINDOW_WIDTH);
             break;
         }
 
         if (hasLost(computerBoard)) {
-            printf("Player wins!!!!!!!!!!!!\n");
+            showGameOverScreen("YOU WIN", botGame, MULTIPLAYER_WINDOW_WIDTH);
             break;
         }
 
