@@ -1,8 +1,11 @@
 #include "game.h"
-int panel_offset_x = X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20;
+
 void showMainMenu() {
+    int buttonWidth = 350;
+    int buttonHeight = 50;
+
     MenuButton soloButton = {
-        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - 250, 200, 500, 50},
+        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - (buttonWidth / 2), 200, buttonWidth, buttonHeight},
         .text = "Jouer en solo",
         .baseColor = {70, 130, 180},
         .hoverColor = {100, 149, 237},
@@ -11,7 +14,7 @@ void showMainMenu() {
     };
 
     MenuButton vsBotButton = {
-        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - 250, 300, 500, 50},
+        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - (buttonWidth / 2), 300, buttonWidth, buttonHeight},
         .text = "Jouer contre IA",
         .baseColor = {34, 139, 34},
         .hoverColor = {60, 179, 113},
@@ -20,7 +23,7 @@ void showMainMenu() {
     };
 
     MenuButton quitButton = {
-        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - 250, 400, 500, 50},
+        .rect = {MULTIPLAYER_WINDOW_WIDTH / 2 - (buttonWidth / 2), 400, buttonWidth, buttonHeight},
         .text = "quitter",
         .baseColor = {232, 60, 60},
         .hoverColor = {230, 92, 92},
@@ -92,15 +95,25 @@ void drawButton(MenuButton* button) {
     if (button->text != NULL)
         len = strlen(button->text);
 
-    int textX = button->rect.x + (button->rect.w - len * CHAR_WIDTH) / 2;
-    int textY = button->rect.y + (button->rect.h - CHAR_HEIGHT) / 2;
+    int charWidth = 25;
+    int charHeight = 25;
+    int spacing = -5;
 
-    drawText(button->text, textX, textY, (SDL_Color){255, 255, 255});
+    int textX = button->rect.x + (button->rect.w - len * (charWidth + spacing)) / 2;
+    int textY = button->rect.y + (button->rect.h - charHeight) / 2;
+
+    //drawText(button->text, textX, textY, (SDL_Color){255, 255, 255});
+    drawTextSpaced(button->text, textX, textY, (SDL_Color){255, 255, 255}, charWidth, charHeight, spacing);
 }
 
 void drawBlock(int x, int y, int color[])
 {
-    SDL_Rect outsideBlock = {x * BLOCK_SIZE + X_OFFSET, y * BLOCK_SIZE + Y_OFFSET, BLOCK_SIZE, BLOCK_SIZE};
+    SDL_Rect outsideBlock = {
+        x * BLOCK_SIZE + X_OFFSET,
+        y * BLOCK_SIZE + Y_OFFSET,
+        BLOCK_SIZE,
+        BLOCK_SIZE
+    };
 
     int r = color[0];
     int g = color[1];
@@ -112,23 +125,29 @@ void drawBlock(int x, int y, int color[])
 
     double offset = 0.6;
 
-    SDL_Rect insideBlock = {x * BLOCK_SIZE+ X_OFFSET + (BLOCK_SIZE * (1 - offset) / 2), y * BLOCK_SIZE + Y_OFFSET + (BLOCK_SIZE * (1 - offset) / 2), BLOCK_SIZE * offset, BLOCK_SIZE * offset};
+    SDL_Rect insideBlock = {
+        x * BLOCK_SIZE + X_OFFSET + (BLOCK_SIZE * (1 - offset) / 2),
+        y * BLOCK_SIZE + Y_OFFSET + (BLOCK_SIZE * (1 - offset) / 2),
+        BLOCK_SIZE * offset,
+        BLOCK_SIZE * offset
+    };
 
     SDL_SetRenderDrawColor(renderer, r, g, b, 255);
 
     SDL_RenderFillRect(renderer, &insideBlock);
 }
-void drawGrid() {
+
+void drawGrid(Board* board) {
     SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255); // Couleur gris foncé pour la grille
 
     // Lignes verticales
     for (int x = 0; x <= BOARD_WIDTH; x++) {
         SDL_RenderDrawLine(
             renderer,
-            x * BLOCK_SIZE + X_OFFSET,         // x début
-            Y_OFFSET,                      // y début
-            x * BLOCK_SIZE + X_OFFSET,         // x fin
-            BOARD_HEIGHT * BLOCK_SIZE + Y_OFFSET  // y fin
+            x * BLOCK_SIZE + X_OFFSET + (board->x * BLOCK_SIZE),            // x début
+            Y_OFFSET + (board->y * BLOCK_SIZE),                             // y début
+            x * BLOCK_SIZE + X_OFFSET + (board->x * BLOCK_SIZE),            // x fin
+            BOARD_HEIGHT * BLOCK_SIZE + Y_OFFSET + (board->y * BLOCK_SIZE)  // y fin
         );
     }
 
@@ -136,17 +155,18 @@ void drawGrid() {
     for (int y = 0; y <= BOARD_HEIGHT; y++) {
         SDL_RenderDrawLine(
             renderer,
-             X_OFFSET,                      // x début
-            y * BLOCK_SIZE + Y_OFFSET,         // y début
-            BOARD_WIDTH * BLOCK_SIZE + X_OFFSET, // x fin
-            y * BLOCK_SIZE + Y_OFFSET          // y fin
+            X_OFFSET + (board->x * BLOCK_SIZE),                            // x début
+            y * BLOCK_SIZE + Y_OFFSET + (board->y * BLOCK_SIZE),           // y début
+            BOARD_WIDTH * BLOCK_SIZE + X_OFFSET + (board->x * BLOCK_SIZE), // x fin
+            y * BLOCK_SIZE + Y_OFFSET + (board->y * BLOCK_SIZE)            // y fin
         );
     }
 }
-void drawBoardBorder() {
+
+void drawBoardBorder(Board* board) {
     SDL_Rect borderRect = {
-        X_OFFSET,  // x
-        Y_OFFSET,  // y
+        X_OFFSET + (board->x * BLOCK_SIZE),  // x
+        Y_OFFSET + (board->y * BLOCK_SIZE),  // y
         BOARD_WIDTH * BLOCK_SIZE,  // largeur totale du plateau
         BOARD_HEIGHT * BLOCK_SIZE  // hauteur totale du plateau
     };
@@ -156,23 +176,27 @@ void drawBoardBorder() {
     SDL_RenderDrawRect(renderer, &borderRect); // Dessine un rectangle vide
 }
 
-void drawScore(int score) {
+void drawPlayerMenu(int x, int y, int score, Tetromino* next) {
+    //int panel_offset_x = X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20;
+
+    drawScore(x, y, score);
+
+    drawNextTetromino(x, y, next);
+}
+
+void drawScore(int x, int y, int score) {
     char buffer[32];
     sprintf(buffer, "Score: %d", score);
 
     SDL_Color white = {255, 255, 255};
-    //SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    drawText(buffer,panel_offset_x,Y_OFFSET,white);
-    //SDL_Rect dstRect = {panel_offset_x, Y_OFFSET, textSurface->w, textSurface->h};
-    //SDL_RenderCopy(renderer, textTexture, NULL, &dstRect);
 
-    //SDL_DestroyTexture(textTexture);
+    drawTextSpaced(buffer, x, y, white, 20, 20, 5);
 }
 
-void drawNextTetromino(Tetromino* next) {
+void drawNextTetromino(int x, int y, Tetromino* next) {
     int previewBlockSize = BLOCK_SIZE / 2;
-    int previewOffsetX = panel_offset_x;
-    int previewOffsetY = Y_OFFSET + 50;
+    int previewOffsetX = x;
+    int previewOffsetY = y + 50;
 
     for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++) {
         for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++) {
