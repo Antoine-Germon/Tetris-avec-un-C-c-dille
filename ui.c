@@ -174,6 +174,17 @@ void drawBoardBorder(Board* board) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Blanc, par exemple
 
     SDL_RenderDrawRect(renderer, &borderRect); // Dessine un rectangle vide
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Rouge
+
+    int lineY = Y_OFFSET + (board->y + 4) * BLOCK_SIZE; // Ligne 4 en pixels
+    int startX = X_OFFSET + (board->x * BLOCK_SIZE);
+    int endX = startX + BOARD_WIDTH * BLOCK_SIZE;
+
+    // Ligne en tirets : 5 pixels dessinés, 5 pixels d’espace
+    for (int x = startX; x < endX; x += 10) {
+        SDL_RenderDrawLine(renderer, x, lineY, x + 5, lineY);
+    }
 }
 
 void drawPlayerMenu(int x, int y, int score, Tetromino* next) {

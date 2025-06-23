@@ -50,10 +50,16 @@ void singleGame() {
             }
         }
 
+        if (hasLost(playerBoard)) {
+            printf("You lost.............\n");
+            break;
+        }
+
         // Move tetromino down every 500ms
         if (SDL_GetTicks() - lastFallTime > 500)
         {
             moveTetromino(playerBoard, 0, 1);
+
             lastFallTime = SDL_GetTicks();
         }
 
@@ -131,11 +137,22 @@ void botGame() {
             }
         }
 
+        if (hasLost(playerBoard)) {
+            printf("Computer wins!!!!!!!!!!!!\n");
+            break;
+        }
+
+        if (hasLost(computerBoard)) {
+            printf("Player wins!!!!!!!!!!!!\n");
+            break;
+        }
+
         // Move tetromino down every 500ms
         if (SDL_GetTicks() - lastFallTime > 500)
         {
             moveTetromino(playerBoard, 0, 1);
             moveTetromino(computerBoard, 0, 1);
+            
             lastFallTime = SDL_GetTicks();
         }
 
@@ -399,6 +416,15 @@ void clearLine(Board * board, int row)
         board->gameBoard[i] = board->gameBoard[i - 1];
         board->gameBoard[i - 1] = tmp;
     }
+}
+
+char hasLost(Board* board) {
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < BOARD_WIDTH; j++) {
+            if (board->gameBoard[i][j].occupied) return true;
+        }
+    }
+    return false;
 }
 
 void setCellColor(Board * board, int x, int y, int r, int g, int b)
