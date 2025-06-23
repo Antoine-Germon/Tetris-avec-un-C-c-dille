@@ -378,13 +378,6 @@ void draw(Board * board)
             if (currentTetromino->shape[i][j])
             {
                 drawBlock(currentTetromino->x + j + offsetX, currentTetromino->y + i + offsetY, currentTetromino->color);
-                /* SDL_Rect block = {
-                    (currentTetromino->x + j) * BLOCK_SIZE,
-                    (currentTetromino->y + i) * BLOCK_SIZE,
-                    BLOCK_SIZE,
-                    BLOCK_SIZE
-                };
-                SDL_RenderFillRect(renderer, &block); */
             }
         }
     }
