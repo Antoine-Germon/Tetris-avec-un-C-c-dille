@@ -50,6 +50,7 @@ void showMainMenu() {
                     singleGame();
                     return;
                 } else if (vsBotButton.hovered) {
+                    SDL_SetWindowSize(pWindow, MULTIPLAYER_WINDOW_WIDTH, WINDOW_HEIGHT);
                     botGame();
                     return;
                 } else if (quitButton.hovered) {
@@ -277,6 +278,8 @@ void showGameOverScreen(const char* text, RestartCallback restartFunction, int w
                     exit(0);
                 }
                 else if (menuButton.hovered) {
+                    SDL_SetWindowSize(pWindow, MULTIPLAYER_WINDOW_WIDTH, WINDOW_HEIGHT);
+
                     showMainMenu();
                 }
             }
