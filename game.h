@@ -28,6 +28,8 @@ void draw(Board * board);
 char checkLineFull(Board * board, int row);
 void clearLine(Board * board, int row);
 
+char hasLost(Board* board);
+
 void setCellColor(Board * board, int x, int y, int r, int g, int b);
 
 bool canMove(Board * board, int dx, int dy);
