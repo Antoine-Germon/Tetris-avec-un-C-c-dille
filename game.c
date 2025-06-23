@@ -419,7 +419,12 @@ void clearLine(Board * board, int row)
 }
 
 char hasLost(Board* board) {
-    return (board->currentTetromino->y == 0) && !canMove(board, 0, 0);
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < BOARD_WIDTH; j++) {
+            if (board->gameBoard[i][j].occupied) return true;
+        }
+    }
+    return false;
 }
 
 void setCellColor(Board * board, int x, int y, int r, int g, int b)
