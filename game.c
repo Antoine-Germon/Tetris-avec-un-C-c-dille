@@ -42,7 +42,7 @@ void singleGame() {
                     break;
                 }
                 case SDLK_ESCAPE:
-                    quit = true;
+                    showPauseScreen(singleGame, SINGLEPLAYER_WINDOW_WIDTH);
                     break;
                 default:
                     break;
@@ -82,6 +82,154 @@ void singleGame() {
     SDL_Quit();
     
     freeBoard(playerBoard);
+}
+
+Cell** copyGameBoard(Cell** original) {
+    Cell** copy = malloc(BOARD_HEIGHT * sizeof(Cell*));
+    for (int i = 0; i < BOARD_HEIGHT; i++) {
+        copy[i] = malloc(BOARD_WIDTH * sizeof(Cell));
+        for (int j = 0; j < BOARD_WIDTH; j++) {
+            copy[i][j] = original[i][j];  // copy cell including color
+        }
+    }
+    return copy;
+}
+
+void freeGameBoard(Cell** board) {
+    for (int i = 0; i < BOARD_HEIGHT; i++) {
+        free(board[i]);
+    }
+    free(board);
+}
+
+int evaluateGameBoard(Cell** gameBoard) {
+    int heights[BOARD_WIDTH] = {0};
+    int totalHeight = 0;
+    int maxHeight = 0;
+    int holes = 0;
+    int bumpiness = 0;
+    int completeLines = 0;
+
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            if (gameBoard[y][x].occupied) {
+                heights[x] = BOARD_HEIGHT - y;
+                break;
+            }
+        }
+        totalHeight += heights[x];
+        if (heights[x] > maxHeight)
+            maxHeight = heights[x];
+    }
+
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        bool blockSeen = false;
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            if (gameBoard[y][x].occupied) {
+                blockSeen = true;
+            } else if (blockSeen) {
+                holes++;
+            }
+        }
+    }
+
+    for (int x = 0; x < BOARD_WIDTH - 1; x++) {
+        bumpiness += abs(heights[x] - heights[x + 1]);
+    }
+
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        bool full = true;
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if (!gameBoard[y][x].occupied) {
+                full = false;
+                break;
+            }
+        }
+        if (full) completeLines++;
+    }
+
+    int score =
+        -5 * totalHeight +
+         20 * completeLines +
+        -3 * holes +
+        -1 * bumpiness;
+
+    /*printf("score=%d (lines=%d holes=%d height=%d bump=%d)\n",
+       score, completeLines, holes, totalHeight, bumpiness);*/
+
+
+    return score;
+}
+
+
+// 0=left, 1=right, 2=down, 3=rotate
+int getBestMove(Board *board) {
+    int bestScore = INT32_MIN; // on définit un high score
+    int bestX = board->currentTetromino->x;
+    int bestRotation = 0;
+
+    for (int rot = 0; rot < 4; rot++) {
+        Tetromino* testTetromino = malloc(sizeof(Tetromino));
+        memcpy(testTetromino, board->currentTetromino, sizeof(Tetromino));
+
+        for (int r = 0; r < rot; r++) {
+            Tetromino* rotated = rotateTetrominoLeft(board);
+            if (rotated) {
+                free(testTetromino);
+                testTetromino = rotated;
+            }
+        }
+
+        for (int x = -2; x < BOARD_WIDTH; x++) {
+            Tetromino testPiece = *testTetromino;
+            testPiece.x = x;
+            testPiece.y = 0;
+
+            if (!isValidPosition(board, &testPiece)) continue;
+
+            // On drop la pièce tout en bas du plateau
+            while (isValidPosition(board, &testPiece)) {
+                testPiece.y += 1;
+            }
+            testPiece.y -= 1;
+
+            // On crée une copie du gameboard
+            Cell** testBoard = copyGameBoard(board->gameBoard);
+
+            for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++) {
+                for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++) {
+                    if (testPiece.shape[i][j]) {
+                        int bx = testPiece.x + j;
+                        int by = testPiece.y + i;
+                        if (bx >= 0 && bx < BOARD_WIDTH && by >= 0 && by < BOARD_HEIGHT) {
+                            testBoard[by][bx].occupied = 1;
+                        }
+                    }
+                }
+            }
+
+            int score = evaluateGameBoard(testBoard);
+            if (score > bestScore) {
+                bestScore = score;
+                bestX = x;
+                bestRotation = rot;
+            }
+
+            freeGameBoard(testBoard);
+        }
+        free(testTetromino);
+    }
+
+    // Decide next move to reach bestX and bestRotation
+    int curX = board->currentTetromino->x;
+    if (bestRotation > 0)
+        return 3;  // rotate
+    else if (curX < bestX)
+        return 1;  // move right
+    else if (curX > bestX)
+        return 0;  // move left
+    else
+        return 2;  // drop
 }
 
 void botGame() {
@@ -124,13 +272,13 @@ void botGame() {
                 {
                    Tetromino *rotated = rotateTetrominoLeft(playerBoard);
                     if (rotated != NULL) {
-                        free(playerBoard->currentTetromino);
-                        playerBoard->currentTetromino = rotated;
+                        memcpy(playerBoard->currentTetromino, rotated, sizeof(Tetromino));
+                        free(rotated);
                     }
                     break;
                 }
                 case SDLK_ESCAPE:
-                    quit = true;
+                    showPauseScreen(botGame, MULTIPLAYER_WINDOW_WIDTH);
                     break;
                 default:
                     break;
@@ -148,6 +296,31 @@ void botGame() {
             break;
         }
 
+        if (SDL_GetTicks() - lastFallTime > 10) {
+            int move = getBestMove(computerBoard);
+
+            switch (move) {
+                case 0:
+                    moveTetromino(computerBoard, -1, 0);
+                    break;
+                case 1:
+                    moveTetromino(computerBoard, 1, 0);
+                    break;
+                case 2:
+                    moveTetromino(computerBoard, 0, 1);
+                    break;
+                case 3:
+                {
+                   Tetromino *rotated = rotateTetrominoLeft(computerBoard);
+                    if (rotated != NULL) {
+                        free(computerBoard->currentTetromino);
+                        computerBoard->currentTetromino = rotated;
+                    }
+                    break;
+                }
+            }
+        }
+
         // Move tetromino down every 500ms
         if (SDL_GetTicks() - lastFallTime > 500)
         {
@@ -163,7 +336,7 @@ void botGame() {
         draw(playerBoard);
         draw(computerBoard);
 
-        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, playerBoard->score, playerBoard->level,playerBoard->currentTetromino);
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, playerBoard->score, playerBoard->level,playerBoard->nextTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -236,13 +409,11 @@ int isValidPosition(Board *board, Tetromino *tetromino) {
 
                 // Check bounds
                 if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
-                    printf("out of bounds\n");
                     return 0;
                 }
 
                 // Check collision with existing blocks
                 if (board->gameBoard[y][x].occupied) {
-                    printf("collision\n");
                     return 0;
                 }
             }
@@ -302,6 +473,10 @@ void placeTetromino(Board * board)
     free(board->currentTetromino);
     board->currentTetromino = board->nextTetromino;
     board->nextTetromino = getNextTetromino(board);
+     if (board->currentTetromino == NULL || board->nextTetromino == NULL) {
+        printf("ERREUR: Impossible de générer le prochain Tetromino.\n");
+        exit(EXIT_FAILURE);
+    }
     board->currentTetromino->x = 3;
     board->currentTetromino->y = 0;
 }
@@ -315,7 +490,6 @@ void moveTetromino(Board * board, int dx, int dy)
     }
     else if (dy > 0) // If moving down is blocked, place the piece
     {
-        printf("PLAAAAACE\n");
         placeTetromino(board);
     }
 }
@@ -421,14 +595,15 @@ char checkLineFull(Board * board, int row)
 
 void clearLine(Board * board, int row)
 {
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        board->gameBoard[row][i].occupied = 0;
+    for (int i = row; i > 0; i--) {
+        for (int j = 0; j < BOARD_WIDTH; j++) {
+            board->gameBoard[i][j] = board->gameBoard[i - 1][j];
+        }
     }
 
-    for (int i = row; i > 0; i--) {
-        Cell * tmp = board->gameBoard[i - 1];
-        board->gameBoard[i] = board->gameBoard[i - 1];
-        board->gameBoard[i - 1] = tmp;
+   for (int j = 0; j < BOARD_WIDTH; j++) {
+        board->gameBoard[0][j].occupied = 0;
+        setCellColor(board, j, 0, 0, 0, 0);
     }
 }
 

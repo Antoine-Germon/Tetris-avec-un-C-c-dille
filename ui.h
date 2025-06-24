@@ -16,5 +16,6 @@ void drawScore(int x, int y, int score);
 void drawNextTetromino(int x, int y, Tetromino* next);
 void drawLevel(int x, int y, int level);
 void drawPlayerMenu(int x, int y, int score, int level,Tetromino* next);
+void showPauseScreen(RestartCallback restartFunction, int width);
 void showGameOverScreen(const char* text, RestartCallback restartFunction,int width);
 #endif // UI_H
