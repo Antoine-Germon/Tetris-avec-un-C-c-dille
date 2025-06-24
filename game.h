@@ -4,11 +4,10 @@
 #include "tetris.h"
 #include "utils.h"
 #include "ui.h"
-
+#include "bot.h"
 void singleGame();
 void botGame();
 
-// Fonctions liées aux Tetrominos
 Tetromino *rotateTetrominoLeft(Board * board);
 
 int tryMoveTetromino(Board *board, Tetromino *tetromino, int dx, int dy);
@@ -20,17 +19,8 @@ int isValidPosition(Board *board, Tetromino *tetromino);
 
 void addGarbageLine(Board* board, int numberOfRows);
 
-int evaluateGameBoard(Cell** gameBoard);
-int getBestMove(Board *board);
-
-Cell** copyGameBoard(Cell** original);
-
 void freeGameBoard(Cell** board);
 
-// Fonctions liées au plateau
-Board * createBoard(int x, int y);
-void freeBoard(Board * board);
-void draw(Board * board);
 char checkLineFull(Board * board, int row);
 void clearLine(Board * board, int row);
 

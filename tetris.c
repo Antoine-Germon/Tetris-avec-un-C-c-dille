@@ -19,7 +19,7 @@ const int tetrominoCount = sizeof(tetrominos) / sizeof(tetrominos[0]);
 
 void refillBag(Board* board) {
     for (int i = 0; i < BAG_SIZE; i++) {
-        board->tetrominoBag[i] = i;  // Indices 0 à 6 correspondant aux 7 tetrominos
+        board->tetrominoBag[i] = i;  
     }
 
     // Shuffle avec Fisher-Yates
@@ -46,4 +46,59 @@ Tetromino* getNextTetromino(Board* board) {
 
     *copy = tetrominos[index];
     return copy;
+}
+void setCellColor(Board * board, int x, int y, int r, int g, int b)
+{
+    board->gameBoard[y][x].color[0] = r;
+    board->gameBoard[y][x].color[1] = g;
+    board->gameBoard[y][x].color[2] = b;
+}
+Board * createBoard(int x, int y)
+{
+    Board * board = malloc(sizeof(Board));
+    board->score = 0;
+    board->level = 1;
+    board->linesCleared = 0;
+    board->x = x;
+    board->y = y;
+    
+    Cell ** gameBoard = malloc(BOARD_HEIGHT * sizeof(Cell *));
+    if (!gameBoard) {
+        printf("Failed to allocate memory for row pointers\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < BOARD_HEIGHT; i++) {
+        gameBoard[i] = malloc(sizeof(Cell) * BOARD_WIDTH); 
+        if (!gameBoard[i]) {
+            printf("Failed to allocate memory for row\n");
+
+            while (--i >= 0) free(gameBoard[i]);
+            free(gameBoard);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    board->gameBoard = gameBoard;
+
+    for (int y = 0; y < BOARD_HEIGHT; y++)
+    {
+        for (int x = 0; x < BOARD_WIDTH; x++)
+        {
+            board->gameBoard[y][x].occupied = 0;
+            setCellColor(board, x, y, 0, 0, 0);
+        }
+    }
+
+    return board;
+}
+
+void freeBoard(Board * board)
+{
+    for (int i = 0; i < BOARD_HEIGHT; i++)
+        free(board->gameBoard[i]);
+
+    free(board->gameBoard);
+
+    free(board);
 }

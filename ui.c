@@ -1,5 +1,40 @@
 #include "game.h"
 
+void draw(Board * board)
+{
+    int offsetX = board->x;
+    int offsetY = board->y;
+    
+    // Draw board
+    for (int y = 0; y < BOARD_HEIGHT; y++)
+    {
+        for (int x = 0; x < BOARD_WIDTH; x++)
+        {
+            if (board->gameBoard[y][x].occupied)
+            {
+                drawBlock(offsetX + x, offsetY + y, board->gameBoard[y][x].color);
+            }
+        }
+    }
+
+    Tetromino * currentTetromino = board->currentTetromino;
+
+    // Draw the current Tetromino
+    SDL_SetRenderDrawColor(renderer, currentTetromino->color[0], currentTetromino->color[1], currentTetromino->color[2], 255);
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            if (currentTetromino->shape[i][j])
+            {
+                drawBlock(currentTetromino->x + j + offsetX, currentTetromino->y + i + offsetY, currentTetromino->color);
+            }
+        }
+    }
+
+    drawGrid(board);
+    drawBoardBorder(board);
+}
 void showMainMenu() {
     int buttonWidth = 350;
     int buttonHeight = 50;
@@ -104,7 +139,6 @@ void drawButton(MenuButton* button) {
     int textX = button->rect.x + (button->rect.w - len * (charWidth + spacing)) / 2;
     int textY = button->rect.y + (button->rect.h - charHeight) / 2;
 
-    //drawText(button->text, textX, textY, (SDL_Color){255, 255, 255});
     drawTextSpaced(button->text, textX, textY, (SDL_Color){255, 255, 255}, charWidth, charHeight, spacing);
 }
 
@@ -173,11 +207,11 @@ void drawBoardBorder(Board* board) {
         BOARD_HEIGHT * BLOCK_SIZE  // hauteur totale du plateau
     };
 
-    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Blanc, par exemple
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 
-    SDL_RenderDrawRect(renderer, &borderRect); // Dessine un rectangle vide
+    SDL_RenderDrawRect(renderer, &borderRect); 
 
-    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Rouge
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 
     int lineY = Y_OFFSET + (board->y + 4) * BLOCK_SIZE; // Ligne 4 en pixels
     int startX = X_OFFSET + (board->x * BLOCK_SIZE);
@@ -307,7 +341,6 @@ void showPauseScreen(RestartCallback restartFunction, int width) {
         SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
         SDL_RenderClear(renderer);
 
-        // Texte "Game Over"
         drawTextSpaced("Pause", width / 2 - 75, 150, (SDL_Color){255, 0, 0}, 30, 30, 2);
         drawButton(&resumeButton);
 
@@ -383,7 +416,6 @@ void showGameOverScreen(const char* text, RestartCallback restartFunction, int w
         SDL_SetRenderDrawColor(renderer, 30, 30, 30, 255);
         SDL_RenderClear(renderer);
 
-        // Texte "Game Over"
         drawTextSpaced(text, width / 2 - 150, 150, (SDL_Color){255, 0, 0}, 30, 30, 2);
 
         drawButton(&replayButton);
