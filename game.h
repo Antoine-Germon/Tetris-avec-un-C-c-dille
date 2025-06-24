@@ -13,10 +13,12 @@ Tetromino *rotateTetrominoLeft(Board * board);
 
 int tryMoveTetromino(Board *board, Tetromino *tetromino, int dx, int dy);
 
-void placeTetromino(Board * board);
+int placeTetromino(Board * board);
 
-void moveTetromino(Board * board, int dx, int dy);
+void moveTetromino(Board * board, int dx, int dy, Board* opponent);
 int isValidPosition(Board *board, Tetromino *tetromino);
+
+void addGarbageLine(Board* board, int numberOfRows);
 
 int evaluateGameBoard(Cell** gameBoard);
 int getBestMove(Board *board);
