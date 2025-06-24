@@ -42,7 +42,7 @@ void singleGame() {
                     break;
                 }
                 case SDLK_ESCAPE:
-                    quit = true;
+                    showPauseScreen(singleGame, SINGLEPLAYER_WINDOW_WIDTH);
                     break;
                 default:
                     break;
@@ -129,7 +129,7 @@ void botGame() {
                     break;
                 }
                 case SDLK_ESCAPE:
-                    quit = true;
+                    showPauseScreen(botGame, MULTIPLAYER_WINDOW_WIDTH);
                     break;
                 default:
                     break;
