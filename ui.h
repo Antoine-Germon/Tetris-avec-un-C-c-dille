@@ -6,6 +6,7 @@
 #define Y_OFFSET 20
 #define X_OFFSET 15
 typedef void (*RestartCallback)();
+void draw(Board * board);
 void showMainMenu();
 void updateButtonHover(MenuButton* button, int mouseX, int mouseY);
 void drawButton(MenuButton* button);

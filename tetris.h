@@ -2,7 +2,6 @@
 #define TETRIS_H
 
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -68,4 +67,7 @@ extern SDL_Renderer* renderer;
 
 void refillBag(Board* board);
 Tetromino* getNextTetromino(Board* board);
+Board * createBoard(int x, int y);
+void freeBoard(Board * board);
+void setCellColor(Board * board, int x, int y, int r, int g, int b);
 #endif // TETRIS_H

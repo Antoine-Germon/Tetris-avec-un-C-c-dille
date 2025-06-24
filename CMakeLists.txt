@@ -14,6 +14,7 @@ target_sources(${PROJECT_NAME} PUBLIC
     utils.c
     font.c
     ui.c
+    bot.c
     game.c
     main.c
 )
