@@ -271,8 +271,8 @@ void botGame() {
                 {
                    Tetromino *rotated = rotateTetrominoLeft(playerBoard);
                     if (rotated != NULL) {
-                        free(playerBoard->currentTetromino);
-                        playerBoard->currentTetromino = rotated;
+                        memcpy(playerBoard->currentTetromino, rotated, sizeof(Tetromino));
+                        free(rotated);
                     }
                     break;
                 }
@@ -408,13 +408,11 @@ int isValidPosition(Board *board, Tetromino *tetromino) {
 
                 // Check bounds
                 if (x < 0 || x >= BOARD_WIDTH || y < 0 || y >= BOARD_HEIGHT) {
-                    printf("out of bounds\n");
                     return 0;
                 }
 
                 // Check collision with existing blocks
                 if (board->gameBoard[y][x].occupied) {
-                    printf("collision\n");
                     return 0;
                 }
             }
@@ -469,6 +467,10 @@ void placeTetromino(Board * board)
     free(board->currentTetromino);
     board->currentTetromino = board->nextTetromino;
     board->nextTetromino = getNextTetromino(board);
+     if (board->currentTetromino == NULL || board->nextTetromino == NULL) {
+        printf("ERREUR: Impossible de générer le prochain Tetromino.\n");
+        exit(EXIT_FAILURE);
+    }
     board->currentTetromino->x = 3;
     board->currentTetromino->y = 0;
 }
@@ -482,7 +484,6 @@ void moveTetromino(Board * board, int dx, int dy)
     }
     else if (dy > 0) // If moving down is blocked, place the piece
     {
-        printf("PLAAAAACE\n");
         placeTetromino(board);
     }
 }
@@ -586,14 +587,15 @@ char checkLineFull(Board * board, int row)
 
 void clearLine(Board * board, int row)
 {
-    for (int i = 0; i < BOARD_WIDTH; i++) {
-        board->gameBoard[row][i].occupied = 0;
+    for (int i = row; i > 0; i--) {
+        for (int j = 0; j < BOARD_WIDTH; j++) {
+            board->gameBoard[i][j] = board->gameBoard[i - 1][j];
+        }
     }
 
-    for (int i = row; i > 0; i--) {
-        Cell * tmp = board->gameBoard[i - 1];
-        board->gameBoard[i] = board->gameBoard[i - 1];
-        board->gameBoard[i - 1] = tmp;
+   for (int j = 0; j < BOARD_WIDTH; j++) {
+        board->gameBoard[0][j].occupied = 0;
+        setCellColor(board, j, 0, 0, 0, 0);
     }
 }
 
