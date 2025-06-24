@@ -51,7 +51,7 @@ void singleGame() {
         }
 
         if (hasLost(playerBoard)) {
-            printf("You lost.............\n");
+            showGameOverScreen("GAME OVER", singleGame, SINGLEPLAYER_WINDOW_WIDTH);
             break;
         }
 
@@ -69,7 +69,7 @@ void singleGame() {
         /* drawScore(50);
         drawNextTetromino(playerBoard->currentTetromino); */
 
-        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, 50, playerBoard->nextTetromino);
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, playerBoard->score, playerBoard->nextTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -286,12 +286,12 @@ void botGame() {
         }
 
         if (hasLost(playerBoard)) {
-            printf("Computer wins!!!!!!!!!!!!\n");
+            showGameOverScreen("YOU LOSE", botGame, MULTIPLAYER_WINDOW_WIDTH);
             break;
         }
 
         if (hasLost(computerBoard)) {
-            printf("Player wins!!!!!!!!!!!!\n");
+            showGameOverScreen("YOU WIN", botGame, MULTIPLAYER_WINDOW_WIDTH);
             break;
         }
 
@@ -335,7 +335,7 @@ void botGame() {
         draw(playerBoard);
         draw(computerBoard);
 
-        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, 50, playerBoard->nextTetromino);
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, playerBoard->score, playerBoard->currentTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -427,7 +427,7 @@ void placeTetromino(Board * board)
 {
     int checkedLines[BOARD_HEIGHT] = {0};
     int nbOfCheckedLines = 0;
-
+    int nbClearedLine = 0;
     Tetromino * currentTetromino = board->currentTetromino;
 
     for (int i = 0; i < 4; i++)
@@ -458,7 +458,13 @@ void placeTetromino(Board * board)
     {
         int row = checkedLines[i];
         char lineFull = checkLineFull(board, row);
-        if (lineFull) clearLine(board, row);
+        if (lineFull){
+            clearLine(board, row);
+            nbClearedLine++;
+        } 
+    }
+    if(nbClearedLine){
+        board->score += BASE_SCORE*(1+2*(nbClearedLine-1));
     }
     free(board->currentTetromino);
     board->currentTetromino = board->nextTetromino;
