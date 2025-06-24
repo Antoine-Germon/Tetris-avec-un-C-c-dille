@@ -23,13 +23,13 @@ void singleGame() {
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_LEFT:
-                    moveTetromino(playerBoard, -1, 0);
+                    moveTetromino(playerBoard, -1, 0, NULL);
                     break;
                 case SDLK_RIGHT:
-                    moveTetromino(playerBoard, 1, 0);
+                    moveTetromino(playerBoard, 1, 0, NULL);
                     break;
                 case SDLK_DOWN:
-                    moveTetromino(playerBoard, 0, 1);
+                    moveTetromino(playerBoard, 0, 1, NULL);
                     lastFallTime = SDL_GetTicks();
                     break;
                 case SDLK_r:
@@ -59,7 +59,7 @@ void singleGame() {
         // Move tetromino down every 500ms
         if (SDL_GetTicks() - lastFallTime > fallSpeed)
         {
-            moveTetromino(playerBoard, 0, 1);
+            moveTetromino(playerBoard, 0, 1, NULL);
 
             lastFallTime = SDL_GetTicks();
         }
@@ -260,13 +260,13 @@ void botGame() {
                 switch (event.key.keysym.sym)
                 {
                 case SDLK_LEFT:
-                    moveTetromino(playerBoard, -1, 0);
+                    moveTetromino(playerBoard, -1, 0, computerBoard);
                     break;
                 case SDLK_RIGHT:
-                    moveTetromino(playerBoard, 1, 0);
+                    moveTetromino(playerBoard, 1, 0, computerBoard);
                     break;
                 case SDLK_DOWN:
-                    moveTetromino(playerBoard, 0, 1);
+                    moveTetromino(playerBoard, 0, 1, computerBoard);
                     break;
                 case SDLK_r:
                 {
@@ -301,13 +301,13 @@ void botGame() {
 
             switch (move) {
                 case 0:
-                    moveTetromino(computerBoard, -1, 0);
+                    moveTetromino(computerBoard, -1, 0, playerBoard);
                     break;
                 case 1:
-                    moveTetromino(computerBoard, 1, 0);
+                    moveTetromino(computerBoard, 1, 0, playerBoard);
                     break;
                 case 2:
-                    moveTetromino(computerBoard, 0, 1);
+                    moveTetromino(computerBoard, 0, 1, playerBoard);
                     break;
                 case 3:
                 {
@@ -324,8 +324,8 @@ void botGame() {
         // Move tetromino down every 500ms
         if (SDL_GetTicks() - lastFallTime > 500)
         {
-            moveTetromino(playerBoard, 0, 1);
-            moveTetromino(computerBoard, 0, 1);
+            moveTetromino(playerBoard, 0, 1, computerBoard);
+            moveTetromino(computerBoard, 0, 1, playerBoard);
             
             lastFallTime = SDL_GetTicks();
         }
@@ -422,7 +422,7 @@ int isValidPosition(Board *board, Tetromino *tetromino) {
     return 1;
 }
 
-void placeTetromino(Board * board)
+int placeTetromino(Board * board)
 {
     int checkedLines[BOARD_HEIGHT] = {0};
     int nbOfCheckedLines = 0;
@@ -466,6 +466,7 @@ void placeTetromino(Board * board)
             }
         } 
     }
+
     if(nbClearedLine){
         board->score += BASE_SCORE*(1+2*(nbClearedLine-1));
     }
@@ -479,9 +480,35 @@ void placeTetromino(Board * board)
     }
     board->currentTetromino->x = 3;
     board->currentTetromino->y = 0;
+
+    return nbClearedLine;
 }
 
-void moveTetromino(Board * board, int dx, int dy)
+void addGarbageLine(Board* board, int numberOfRows) {
+    for (int i = 0; i < numberOfRows; i++) {
+        // on décale toutes les lignes vers le haut
+        for (int y = 0; y < BOARD_HEIGHT - 1; y++) {
+            for (int x = 0; x < BOARD_WIDTH; x++) {
+                board->gameBoard[y][x] = board->gameBoard[y + 1][x];
+            }
+        }
+
+        // on gènère une ligne pleine avecjuste une seule case vide
+        int holeIndex = rand() % BOARD_WIDTH;
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            board->gameBoard[BOARD_HEIGHT - 1][x].occupied = 1;
+            if (x == holeIndex) {
+                board->gameBoard[BOARD_HEIGHT - 1][x].occupied = 0;
+            }
+
+            board->gameBoard[BOARD_HEIGHT - 1][x].color[0] = 100;
+            board->gameBoard[BOARD_HEIGHT - 1][x].color[1] = 100;
+            board->gameBoard[BOARD_HEIGHT - 1][x].color[2] = 100;
+        }
+    }
+}
+
+void moveTetromino(Board * board, int dx, int dy, Board* opponent)
 {
     if (canMove(board, dx, dy))
     {
@@ -490,7 +517,10 @@ void moveTetromino(Board * board, int dx, int dy)
     }
     else if (dy > 0) // If moving down is blocked, place the piece
     {
-        placeTetromino(board);
+        int linesCleared = placeTetromino(board);
+        if (opponent && linesCleared > 0) {
+            addGarbageLine(opponent, linesCleared);
+        }
     }
 }
 
