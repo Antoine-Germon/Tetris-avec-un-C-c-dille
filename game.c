@@ -505,6 +505,25 @@ void addGarbageLine(Board* board, int numberOfRows) {
             board->gameBoard[BOARD_HEIGHT - 1][x].color[1] = 100;
             board->gameBoard[BOARD_HEIGHT - 1][x].color[2] = 100;
         }
+
+        bool overlap = false;
+        Tetromino *t = board->currentTetromino;
+        for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++) {
+            for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++) {
+                if (t->shape[i][j]) {
+                    int x = t->x + j;
+                    int y = t->y + i;
+                    if (x >= 0 && x < BOARD_WIDTH && y >= 0 && y < BOARD_HEIGHT) {
+                        if (board->gameBoard[y][x].occupied) {
+                            overlap = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (overlap) {
+            t->y -= 1;
+        }
     }
 }
 
