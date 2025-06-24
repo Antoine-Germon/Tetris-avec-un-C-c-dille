@@ -15,5 +15,6 @@ void drawBoardBorder(Board* board);
 void drawScore(int x, int y, int score);
 void drawNextTetromino(int x, int y, Tetromino* next);
 void drawPlayerMenu(int x, int y, int score, Tetromino* next);
+void showPauseScreen(RestartCallback restartFunction, int width);
 void showGameOverScreen(const char* text, RestartCallback restartFunction,int width);
 #endif // UI_H
