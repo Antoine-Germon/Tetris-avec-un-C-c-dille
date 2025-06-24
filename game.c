@@ -54,9 +54,10 @@ void singleGame() {
             showGameOverScreen("GAME OVER", singleGame, SINGLEPLAYER_WINDOW_WIDTH);
             break;
         }
-
+        int fallSpeed = 500 - (playerBoard->level - 1) * 100; 
+        if (fallSpeed < 100) fallSpeed = 100;
         // Move tetromino down every 500ms
-        if (SDL_GetTicks() - lastFallTime > 500)
+        if (SDL_GetTicks() - lastFallTime > fallSpeed)
         {
             moveTetromino(playerBoard, 0, 1);
 
@@ -69,7 +70,7 @@ void singleGame() {
         /* drawScore(50);
         drawNextTetromino(playerBoard->currentTetromino); */
 
-        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, playerBoard->score, playerBoard->nextTetromino);
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, playerBoard->score, playerBoard->level, playerBoard->nextTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -335,7 +336,7 @@ void botGame() {
         draw(playerBoard);
         draw(computerBoard);
 
-        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, playerBoard->score, playerBoard->currentTetromino);
+        drawPlayerMenu(X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20, Y_OFFSET, playerBoard->score, playerBoard->level,playerBoard->nextTetromino);
         SDL_RenderPresent(renderer);
 
         SDL_Delay(50);
@@ -459,11 +460,16 @@ void placeTetromino(Board * board)
         if (lineFull){
             clearLine(board, row);
             nbClearedLine++;
+            board->linesCleared++;
+            if (board->linesCleared % 5 == 0) {
+                board->level++;
+            }
         } 
     }
     if(nbClearedLine){
         board->score += BASE_SCORE*(1+2*(nbClearedLine-1));
     }
+   
     free(board->currentTetromino);
     board->currentTetromino = board->nextTetromino;
     board->nextTetromino = getNextTetromino(board);
@@ -491,7 +497,9 @@ void moveTetromino(Board * board, int dx, int dy)
 Board * createBoard(int x, int y)
 {
     Board * board = malloc(sizeof(Board));
-
+    board->score = 0;
+    board->level = 1;
+    board->linesCleared = 0;
     board->x = x;
     board->y = y;
     

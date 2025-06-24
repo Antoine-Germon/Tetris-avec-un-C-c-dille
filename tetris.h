@@ -45,6 +45,8 @@ typedef struct {
     int tetrominoBag[BAG_SIZE];
     int bagIndex;
     int score;
+    int level;
+    int linesCleared;
 } Board;
 
 typedef struct {
