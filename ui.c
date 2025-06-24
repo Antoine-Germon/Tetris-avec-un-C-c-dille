@@ -189,14 +189,17 @@ void drawBoardBorder(Board* board) {
     }
 }
 
-void drawPlayerMenu(int x, int y, int score, Tetromino* next) {
-    //int panel_offset_x = X_OFFSET + BOARD_WIDTH * BLOCK_SIZE + 20;
-
+void drawPlayerMenu(int x, int y, int score, int level, Tetromino* next) {
     drawScore(x, y, score);
-
+    drawLevel( x,  y, level);
     drawNextTetromino(x, y, next);
 }
-
+void drawLevel(int x, int y, int level) {
+    char buffer[32];
+    sprintf(buffer, "Niveau: %d", level);
+    SDL_Color white = {255, 255, 255};
+    drawTextSpaced(buffer, x, y+50, white, 20, 20, 5);
+}
 void drawScore(int x, int y, int score) {
     char buffer[32];
     sprintf(buffer, "Score: %d", score);
@@ -209,7 +212,7 @@ void drawScore(int x, int y, int score) {
 void drawNextTetromino(int x, int y, Tetromino* next) {
     int previewBlockSize = BLOCK_SIZE / 2;
     int previewOffsetX = x;
-    int previewOffsetY = y + 50;
+    int previewOffsetY = y + 100;
 
     for (int i = 0; i < TETROMINO_SHAPE_BOX_SIZE; i++) {
         for (int j = 0; j < TETROMINO_SHAPE_BOX_SIZE; j++) {
