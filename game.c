@@ -102,31 +102,68 @@ void freeGameBoard(Cell** board) {
 }
 
 int evaluateGameBoard(Cell** gameBoard) {
-    int aggregateHeight = 0;
+    int heights[BOARD_WIDTH] = {0};
+    int totalHeight = 0;
+    int maxHeight = 0;
     int holes = 0;
     int bumpiness = 0;
-    int completedLines = 0;
+    int completeLines = 0;
 
-    int heights[BOARD_WIDTH] = {0};
-
-    // Check des lignes complètes
-    for (int y = 0; y < BOARD_HEIGHT; y++) {
-        int full = 1;
-        for (int x = 0; x < BOARD_WIDTH; x++) {
-            if (!gameBoard[y][x].occupied) {
-                full = 0;
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            if (gameBoard[y][x].occupied) {
+                heights[x] = BOARD_HEIGHT - y;
                 break;
             }
         }
-        if (full) completedLines++;
+        totalHeight += heights[x];
+        if (heights[x] > maxHeight)
+            maxHeight = heights[x];
     }
 
-    return 40 * completedLines;   // Bonus pour chaque ligne complétée
+    for (int x = 0; x < BOARD_WIDTH; x++) {
+        bool blockSeen = false;
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            if (gameBoard[y][x].occupied) {
+                blockSeen = true;
+            } else if (blockSeen) {
+                holes++;
+            }
+        }
+    }
+
+    for (int x = 0; x < BOARD_WIDTH - 1; x++) {
+        bumpiness += abs(heights[x] - heights[x + 1]);
+    }
+
+    for (int y = 0; y < BOARD_HEIGHT; y++) {
+        bool full = true;
+        for (int x = 0; x < BOARD_WIDTH; x++) {
+            if (!gameBoard[y][x].occupied) {
+                full = false;
+                break;
+            }
+        }
+        if (full) completeLines++;
+    }
+
+    int score =
+        -5 * totalHeight +
+         20 * completeLines +
+        -3 * holes +
+        -1 * bumpiness;
+
+    /*printf("score=%d (lines=%d holes=%d height=%d bump=%d)\n",
+       score, completeLines, holes, totalHeight, bumpiness);*/
+
+
+    return score;
 }
+
 
 // 0=left, 1=right, 2=down, 3=rotate
 int getBestMove(Board *board) {
-    int bestScore = 1 << 30; // on définit un high score
+    int bestScore = INT32_MIN; // on définit un high score
     int bestX = board->currentTetromino->x;
     int bestRotation = 0;
 
@@ -171,7 +208,7 @@ int getBestMove(Board *board) {
             }
 
             int score = evaluateGameBoard(testBoard);
-            if (score < bestScore) {
+            if (score > bestScore) {
                 bestScore = score;
                 bestX = x;
                 bestRotation = rot;
@@ -258,7 +295,7 @@ void botGame() {
             break;
         }
 
-        if (SDL_GetTicks() - lastFallTime > 20) {
+        if (SDL_GetTicks() - lastFallTime > 10) {
             int move = getBestMove(computerBoard);
 
             switch (move) {
